@@ -1,10 +1,12 @@
+ALPHABET = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"   #Исправлено
+
 def alphabet():
-    alp = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
+    
     char_to_num = {}
     num_to_char = {}
 
-    for i in range(len(alp)+1):
-        letter = alp[i-1]
+    for i in range(len(ALPHABET)+1):
+        letter = ALPHABET[i-1]
         char_to_num[letter] = i + 1
         num_to_char[i + 1] = letter
 
@@ -42,7 +44,7 @@ def encrypt(text, char_to_num):
     if invalid_symbols:
         print(f" Ошибка: в тексте есть недопустимые символы: {set(invalid_symbols)}")
         print("Текст должен содержать только русские буквы и пробелы!")
-        return None
+        return                                                               #None больше нет
 
     for symbol in text_upper:
         if symbol in char_to_num:
@@ -64,8 +66,8 @@ def decrypt(numbers_str, num_to_char):
                 print(f"Число {num} не найдено в алфавите")
         except ValueError:
             print(f"'{num_str}' не является числом")
-        if not result:
-            return None
+    if not result:
+        return
 
     return "".join(result)
 
