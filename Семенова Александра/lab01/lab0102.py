@@ -1,3 +1,7 @@
+COURSES = ("Высшая математика", "Дискретная математика",
+           "Зоология беспозвоночных", "Анатомия и физиология",
+           "История России")
+
 def get_grade(course_name):
     while True:
             grade_str = input('Введите оценку за курс по дисциплине ', course_name)
@@ -17,7 +21,7 @@ def get_grades(courses):
         grades[course] = grade 
     return grades
 
-def add_students(students_data, name, grades):   #что это блять такое
+def add_students(students_data, name, grades):           
       students_data[name] = grades
       return students_data
 
@@ -28,7 +32,9 @@ def calculate(students_data):
             for grade in students_data[student].values():
                   total_sum += grade
                   total_count += 1
-            return total_sum/total_count
+                if total_count == 0:        #чтобы не делиь на ноль
+                    return 0
+                return total_sum/total_count        #return сдвинут и теперь функция идет по всем оценкам, а не по одной
 
 def find_min_max(students_data):
       all_grades = []
@@ -46,16 +52,16 @@ def print_res(students_data):
       print("Максимальная оценка:", max_grade)
 
 if __name__ == "__main__":
-      courses = ['"Высшая математика" - ', '"Дискретная математика" - ', '"Зоология беспозвоночных" -  ', '"Анатомия и физиология" - ', '"История России" - ']
+      #все курсы теперь находятся в начале кода
       students_data = {}
 
       while True:
             name = input("Введите имя студента: ")
-            grades = get_grades(courses)
+            grades = get_grades(COURSES)
             students_data = add_students(students_data, name, grades)
 
             answer = input("Добавить ещё студента?(да или нет): ")
 
             if answer == "нет":
                   break
-print_res(students_data)
+        print_res(students_data)      #поправлено 
