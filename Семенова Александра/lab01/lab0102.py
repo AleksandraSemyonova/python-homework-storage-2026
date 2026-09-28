@@ -65,3 +65,4 @@ if __name__ == "__main__":
             if answer == "нет":
                   break
         print_res(students_data)      #поправлено 
+
