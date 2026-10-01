@@ -32,7 +32,7 @@ def calculate(students_data):
             for grade in students_data[student].values():
                   total_sum += grade
                   total_count += 1
-                if total_count == 0:        #чтобы не делиь на ноль
+                if total_count == 0:        #чтобы не делить на ноль
                     return 0
                 return total_sum/total_count        #return сдвинут и теперь функция идет по всем оценкам, а не по одной
 
