@@ -5,29 +5,34 @@ FALSE_VALUES = ("False", "false", "0")
 
 
 def parse_value(text):
+    """Пытается определить тип введённого значения."""
     text = text.strip()
-    
+
+    # Проверка на булево (до int, т.к. bool — подтип int)
     if text in TRUE_VALUES or text in FALSE_VALUES:
         if text in TRUE_VALUES:
             return True
         else:
             return False
 
+    # Проверка на целое число
     try:
         return int(text)
     except ValueError:
         pass
-    
+
+    # Проверка на дробное число
     try:
         return float(text)
     except ValueError:
         pass
 
+    # Иначе — строка
     return text
 
 
 def get_yes_no(prompt):
-
+    """Запрашивает ответ 'да' или 'нет' с проверкой."""
     while True:
         answer = input(prompt).lower()
         if answer in ('да', 'нет'):
@@ -36,8 +41,8 @@ def get_yes_no(prompt):
 
 
 def get_arguments():
-
-    print("Введите аргументы через пробел (пустой ввод для завершения):")
+    """Запрашивает у пользователя аргументы разных типов."""
+    print("Введите аргументы через пробел (пустой ввод для завершения)")
     arguments = []
 
     while True:
@@ -63,6 +68,10 @@ def get_arguments():
 
 
 def multiply_integers(arguments):
+    """
+    Возвращает произведение целочисленных аргументов.
+    Если целых нет — возвращает список нецелых с их типами.
+    """
     product = 1
     has_integer = False
     non_integers = []
@@ -81,6 +90,7 @@ def multiply_integers(arguments):
 
 
 def print_result(result):
+    """Выводит результат работы программы."""
     if type(result) is int:
         print("Произведение целочисленных аргументов:", result)
     else:
@@ -94,6 +104,7 @@ def print_result(result):
 
 if __name__ == "__main__":
     try:
+        # Спрашиваем, хочет ли пользователь начать
         start = get_yes_no("Хотите ввести аргументы? (да/нет): ")
 
         if start == 'нет':

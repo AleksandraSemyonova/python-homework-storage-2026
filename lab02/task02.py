@@ -6,7 +6,7 @@ VALID_CHOICES = (SORT_ASCENDING, SORT_DESCENDING)
 
 def get_numbers():
    
-    print("Введите числа (пустой ввод для завершения):")
+    print("Введите числа (пустой ввод для завершения)")
     numbers = []
 
     while True:
