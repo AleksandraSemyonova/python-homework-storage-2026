@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-EMPTY_LIST = ()
 
 def calculate_average_length(strings):
     if not strings:
