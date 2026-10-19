@@ -12,8 +12,9 @@ def calculate_average_length(strings):
     return total_lenght/len(strings)
 
 def filter_long_strings(strings):
-    if not strings:
-        return []
+     text = input("Число(чтобы выйти нажмите Enter): ")
+        if text == "":
+            break
 
     average = calculate_average_length(strings)
     result = []
@@ -38,26 +39,18 @@ def get_strings():
         try:
             text = input("Строка: ")
 
-            if text.strip() == "":
-                if text != "":
-                    print("Ошибка: строка не может состоять только из пробелов!")
-                    continue
+            if text == '':
                 break
+            if text.strip() == "":
+                print("Ошибка: строка не может состоять только из пробелов!")
+                continue
 
             strings.append(text)
 
-            again = get_yes_no("Добавить ещё строку? (да/нет): ")
-            if again == 'нет':
-                break
-
-        except KeyboardInterrupt:
-            print("\nОшибка: ввод прерван пользователем (Ctrl+C).")
-            if strings:
-                print(f"Сохранено введённых строк: {len(strings)}")
-            break
-        except EOFError:
-            print("\nОшибка: конец ввода (Ctrl+D).")
-            break
+            while True:
+                text = input("Введите строку (Enter для завершения): ")
+                if text == '':
+                    break
 
     return strings
 
@@ -77,7 +70,3 @@ if __name__ == "__main__":
                 print("Нет строк длиннее среднего.")
             else:
                 print(f"Строки длиннее среднего: {result}")
-
-    except Exception as e:
-        print(f"Непредвиденная ошибка: {e}")
-        print("Попробуйте запустить программу снова.")
