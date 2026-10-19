@@ -51,7 +51,3 @@ if __name__ == "__main__":
         iterative_result = factorial_iterative(n)
 
         print_factorial_results(n, recursive_result, iterative_result)
-
-    except Exception as e:
-        print(f"Непредвиденная ошибка: {e}")
-        print("Попробуйте запустить программу снова.")
