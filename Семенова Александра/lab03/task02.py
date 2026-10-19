@@ -90,7 +90,7 @@ def input_products():
         discount = read_discount()
 
         products.append({"name": name, "price": price, "discount": discount})
-        print()
+
 
     return products
 
