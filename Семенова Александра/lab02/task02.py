@@ -59,7 +59,3 @@ if __name__ == "__main__":
             order_name = get_order_name(order)
 
             print(f"\nЧисла по {order_name}: {result}")
-
-    except Exception as e:
-        print(f"Непредвиденная ошибка: {e}")
-        print("Попробуйте запустить программу снова.")
