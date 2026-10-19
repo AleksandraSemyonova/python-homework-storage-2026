@@ -3,7 +3,6 @@
 VOWELS = ('а', 'е', 'и', 'о', 'у', 'ы', 'э', 'ю', 'я','a', 'e', 'i', 'o', 'u')
 
 MIN_VOWELS = 3
-EMPTY_DICT = ()
 
 def count_vowels(text):
     count = 0
@@ -72,7 +71,3 @@ if __name__ == "__main__":
             kwargs = get_kwargs_from_user()
             result = filter_kwargs(**kwargs)
             print_result(result)
-
-    except Exception as e:
-        print(f"Непредвиденная ошибка: {e}")
-        print("Попробуйте запустить программу снова.")
