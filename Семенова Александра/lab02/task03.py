@@ -3,80 +3,41 @@
 TRUE_VALUES = ("True", "true", "1")
 FALSE_VALUES = ("False", "false", "0")
 
+DEMO_ARGUMENTS_1 = ("3", "hello", "5", "2.5", "True", "world", "4")
+DEMO_ARGUMENTS_2 = ("3.14", "hello", "True", "2.5")
+DEMO_ARGUMENTS_3 = ("2", "3", "4", "5")
+
 
 def parse_value(text):
-    """Пытается определить тип введённого значения."""
+   
     text = text.strip()
 
-    # Проверка на булево (до int, т.к. bool — подтип int)
     if text in TRUE_VALUES or text in FALSE_VALUES:
         if text in TRUE_VALUES:
             return True
         else:
             return False
 
-    # Проверка на целое число
     try:
         return int(text)
     except ValueError:
         pass
 
-    # Проверка на дробное число
     try:
         return float(text)
     except ValueError:
         pass
 
-    # Иначе — строка
     return text
 
 
-def get_yes_no(prompt):
-    """Запрашивает ответ 'да' или 'нет' с проверкой."""
-    while True:
-        answer = input(prompt).lower()
-        if answer in ('да', 'нет'):
-            return answer
-        print("Ошибка: введите 'да' или 'нет'!")
+def multiply_integers(*args):
 
-
-def get_arguments():
-    """Запрашивает у пользователя аргументы разных типов."""
-    print("Введите аргументы через пробел (пустой ввод для завершения)")
-    arguments = []
-
-    while True:
-        text = input("Аргумент: ")
-        if text.strip() == "":
-            if not arguments:
-                print("Ошибка: нужно ввести хотя бы один аргумент!")
-                continue
-            else:
-                break
-
-        parts = text.split(" ")
-        for part in parts:
-            if part.strip() != "":
-                value = parse_value(part)
-                arguments.append(value)
-
-        again = get_yes_no("Добавить ещё аргументы? (да/нет): ")
-        if again == 'нет':
-            break
-
-    return arguments
-
-
-def multiply_integers(arguments):
-    """
-    Возвращает произведение целочисленных аргументов.
-    Если целых нет — возвращает список нецелых с их типами.
-    """
     product = 1
     has_integer = False
     non_integers = []
 
-    for arg in arguments:
+    for arg in args:
         if type(arg) is int:
             product = product * arg
             has_integer = True
@@ -90,7 +51,7 @@ def multiply_integers(arguments):
 
 
 def print_result(result):
-    """Выводит результат работы программы."""
+  
     if type(result) is int:
         print("Произведение целочисленных аргументов:", result)
     else:
@@ -102,18 +63,35 @@ def print_result(result):
             print(f"  Значение: {value} | Тип: {arg_type}")
 
 
+def parse_arguments(raw_args):
+    
+    return tuple(parse_value(arg) for arg in raw_args)
+
+
 if __name__ == "__main__":
-    try:
-        # Спрашиваем, хочет ли пользователь начать
-        start = get_yes_no("Хотите ввести аргументы? (да/нет): ")
+    
+    print("--- Тест 1: смешанные аргументы ---")
+    parsed_args_1 = parse_arguments(DEMO_ARGUMENTS_1)
+    print(f"Исходные аргументы: {parsed_args_1}")
+    result_1 = multiply_integers(*parsed_args_1)
+    print_result(result_1)
+ 
 
-        if start == 'нет':
-            print("Программа завершена. Аргументы не были введены.")
-        else:
-            arguments = get_arguments()
-            result = multiply_integers(arguments)
-            print_result(result)
+    print("--- Тест 2: только нецелые аргументы ---")
+    parsed_args_2 = parse_arguments(DEMO_ARGUMENTS_2)
+    print(f"Исходные аргументы: {parsed_args_2}")
+    result_2 = multiply_integers(*parsed_args_2)
+    print_result(result_2)
+ 
 
-    except Exception as e:
-        print(f"Непредвиденная ошибка: {e}")
-        print("Попробуйте запустить программу снова.")
+    print("--- Тест 3: только целые числа ---")
+    parsed_args_3 = parse_arguments(DEMO_ARGUMENTS_3)
+    print(f"Исходные аргументы: {parsed_args_3}")
+    result_3 = multiply_integers(*parsed_args_3)
+    print_result(result_3)
+    
+
+    print("--- Тест 4: аргументы разных типов напрямую ---")
+    print("Аргументы: 10, 'text', 3, 2.7, False, 5")
+    result_4 = multiply_integers(10, "text", 3, 2.7, False, 5)
+    print_result(result_4)
