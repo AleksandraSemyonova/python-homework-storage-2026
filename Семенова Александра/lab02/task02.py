@@ -54,3 +54,4 @@ if __name__ == "__main__":
         result = merge_sort(numbers)
         formatted_result = [int(x) if x.is_integer() else x for x in result]
         print(f"\nЧисла по возрастанию: {formatted_result}")
+
