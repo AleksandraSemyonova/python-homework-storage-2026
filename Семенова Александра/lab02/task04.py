@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
-
-VOWELS = ('а', 'е', 'и', 'о', 'у', 'ы', 'э', 'ю', 'я','a', 'e', 'i', 'o', 'u')
-
+VOWELS = ('а', 'е', 'и', 'о', 'у', 'ы', 'э', 'ю', 'я', 'a', 'e', 'i', 'o', 'u')
 MIN_VOWELS = 3
 
+# Псевдоконстанты — тестовые наборы аргументов
+DEMO_KWARGS_1 = {"имя": "Александра", "город": "Москва", "хобби": "чтение"}
+DEMO_KWARGS_2 = {"a": "нет", "b": "да", "c": "привет"}
+DEMO_KWARGS_3 = {"x": "ок", "y": "hi", "z": "go"}
+
+
 def count_vowels(text):
+
     count = 0
     text_lower = text.lower()
-    for symbol in VOWELS:
-        if symbol in VOWELS:      
+    for char in text_lower:
+        if char in VOWELS:
             count += 1
     return count
 
+
 def filter_kwargs(**kwargs):
+ 
     result = {}
 
     for (key, value) in kwargs.items():
@@ -22,52 +29,32 @@ def filter_kwargs(**kwargs):
                 result[key] = value
     return result
 
-def get_yes_no(prompt):
-    while True:
-        answer = input(prompt).lower()
-        if answer in ('да', 'нет'):
-            return answer
-        print("Ошибка: введите 'да' или 'нет'!")
-
-def get_kwargs_from_user():
-    print("Введите аргументы (формат: имя=значение).")
-    print("Пустой ввод имени — завершение.")
-
-    kwargs = {}
-
-    while True:
-        key = input("Имя аргумента: ")
-        if key.strip() == "":
-            if not kwargs:
-                print("Ошибка: нужно ввести хотя бы один аргумент!")
-            else:
-                break
-
-        value = input("Значение: ")
-        kwargs[key] = value
-
-        again = get_yes_no("Добавить ещё аргумент? (да/нет): ")
-        if again == 'нет':
-            break
-
-    return kwargs
 
 def print_result(result):
+   
     if not result:
         print("Аргументы со строками, содержащими 3 и более гласных, не найдены.")
     else:
         print("Найденные аргументы:")
         for key, value in result.items():
-            print(f"  {key} = {value}")
+            print(f"{key} = {value}")
 
 
 if __name__ == "__main__":
-    try:
-        start = get_yes_no("Хотите ввести аргументы? (да/нет): ")
+    print("--- Тест 1: смешанные строки ---")
+    print(f"Аргументы: {DEMO_KWARGS_1}")
+    result_1 = filter_kwargs(**DEMO_KWARGS_1)
+    print_result(result_1)
+    
 
-        if start == 'нет':
-            print("Программа завершена. Аргументы не были введены.")
-        else:
-            kwargs = get_kwargs_from_user()
-            result = filter_kwargs(**kwargs)
-            print_result(result)
+    print("--- Тест 2: короткие строки ---")
+    print(f"Аргументы: {DEMO_KWARGS_2}")
+    result_2 = filter_kwargs(**DEMO_KWARGS_2)
+    print_result(result_2)
+   
+
+    print("--- Тест 3: строки с малым количеством гласных ---")
+    print(f"Аргументы: {DEMO_KWARGS_3}")
+    result_3 = filter_kwargs(**DEMO_KWARGS_3)
+    print_result(result_3)
+
