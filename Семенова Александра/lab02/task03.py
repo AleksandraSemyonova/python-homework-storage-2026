@@ -95,3 +95,4 @@ if __name__ == "__main__":
     print("Аргументы: 10, 'text', 3, 2.7, False, 5")
     result_4 = multiply_integers(10, "text", 3, 2.7, False, 5)
     print_result(result_4)
+
