@@ -1,16 +1,11 @@
 #!/usr/bin/env python3
 
-SORT_ASCENDING = "1"
-SORT_DESCENDING = "2"
-VALID_CHOICES = (SORT_ASCENDING, SORT_DESCENDING)
-
 def get_numbers():
-   
-    print("Введите числа (пустой ввод для завершения)")
+    print("Введите числа")
     numbers = []
 
     while True:
-        text = input("Число(чтобы выйти нажмите Enter): ")
+        text = input("Число (чтобы выйти нажмите Enter): ")
         if text == "":
             break
         try:
@@ -21,41 +16,41 @@ def get_numbers():
 
     return numbers
 
-def get_sort_order():
-    
-    print("\nВыберите порядок сортировки:")
-    print("1 - По возрастанию")
-    print("2 - По убыванию")
 
-    while True:
-        choice = input("Ваш выбор: ")
-        if choice in VALID_CHOICES:
-            return choice
-        print("Ошибка: введите 1 или 2!")
-
-def sort_numbers(numbers, order):
+def merge(left, right):
+    result = []
+    i = j = 0
     
-    if order == SORT_ASCENDING:
-        return sorted(numbers)
-    else:
-        return sorted(numbers, reverse=True)
-
-def get_order_name(order):
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            result.append(left[i])
+            i += 1
+        else:
+            result.append(right[j])
+            j += 1
     
-    if order == SORT_ASCENDING:
-        return "возрастанию"
-    else:
-        return "убыванию"
+    result.extend(left[i:])
+    result.extend(right[j:])
+    return result
+
+
+def merge_sort(arr):
+    if len(arr) <= 1:
+        return arr[:]
+    
+    
+    mid = len(arr) // 2
+    left = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+
+    return merge(left, right)
+
 
 if __name__ == "__main__":
-    try:
-        numbers = get_numbers()
-
-        if not numbers:
-            print("Список чисел пуст!")
-        else:
-            order = get_sort_order()
-            result = sort_numbers(numbers, order)
-            order_name = get_order_name(order)
-
-            print(f"\nЧисла по {order_name}: {result}")
+   numbers = get_numbers()
+   if not numbers:
+        print("Список чисел пуст!")
+   else:
+        result = merge_sort(numbers)
+        formatted_result = [int(x) if x.is_integer() else x for x in result]
+        print(f"\nЧисла по возрастанию: {formatted_result}")
