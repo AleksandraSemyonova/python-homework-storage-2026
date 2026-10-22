@@ -42,7 +42,4 @@ if __name__ == "__main__":
         print("\nРезультат:")
         for n in numbers:
             print(f"{n:>6} : {classify(n)}")
-
-
-
-            
+       
