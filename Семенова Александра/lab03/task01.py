@@ -2,38 +2,30 @@
 
 classify = lambda n: "positive even" if n > 0 and n % 2 == 0 else "positive odd" if n > 0 else "negative" if n < 0 else "zero"
 
-
 def read_integers():
     """
-     :param user_input: Считывает целые числа, введённые пользователем через пробел.
+    Считывает целые числа от пользователя до пустого ввода.
 
-    Ввод можно повторять несколько раз. Пустая строка (нажатие Enter)
-    завершает ввод и возвращает все собранные числа.
-    Некорректные значения пропускаются с выводом предупреждения.
-
-    :return: Список успешно распознанных целых чисел. Если корректных чисел нет - пустой список.
+    :return: список целых чисел, успешно распознанных во вводе.
     """
     print("Введите целые числа через пробел.")
-    print("Enter - завершить ввод.\n")
-
+    print("Пустой ввод (Enter) — завершить.\n")
+    
     numbers = []
-
     while True:
-        raw = input("Числа: ")
-
-        if not raw.strip():
+        raw = input("Числа: ").strip()
+        if not raw:
             break
-
         for item in raw.split():
             try:
                 numbers.append(int(item))
             except ValueError:
-                print(f"'{item}' - не целое число, пропускаем. Вводите только числа.")
-
+                print(f"'{item}' - не целое число, пропускаем.")
     return numbers
 
 
 if __name__ == "__main__":
+
     numbers = read_integers()
 
     if not numbers:
@@ -42,4 +34,6 @@ if __name__ == "__main__":
         print("\nРезультат:")
         for n in numbers:
             print(f"{n:>6} : {classify(n)}")
-       
+
+    input("\nНажмите Enter для выхода.")
+
