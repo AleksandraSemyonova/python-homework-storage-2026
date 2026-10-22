@@ -1,57 +1,48 @@
 #!/usr/bin/env python3
 
-def classify(n):
-    """
-    Классифицирует целое число по знаку и чётности.
-
-    :Args: n: целое число для классификации.
-
-    :Return: 
-        Строка с описанием категории числа:
-        - 'positive even' - положительное чётное;
-        - 'positive odd'  - положительное нечётное;
-        - 'negative'      - отрицательное;
-        - 'zero'          - ноль.
-    """
-    if n > 0 and n % 2 == 0:
-        return "positive even"
-    elif n > 0 and n % 2 != 0:
-        return "positive odd"
-    elif n < 0:
-        return "negative"
-    else:
-        return "zero"
+classify = lambda n: "positive even" if n > 0 and n % 2 == 0 else "positive odd" if n > 0 else "negative" if n < 0 else "zero"
 
 
 def read_integers():
     """
-    Считывает строку от пользователя и возвращает список целых чисел.
+     :param user_input: Считывает целые числа, введённые пользователем через пробел.
 
-    Невалидные символы (буквы, дробные числа) пропускаются с выводом
-    предупреждения в консоль.
+    Ввод можно повторять несколько раз. Пустая строка (нажатие Enter)
+    завершает ввод и возвращает все собранные числа.
+    Некорректные значения пропускаются с выводом предупреждения.
 
-    :Return:
-        Список целых чисел, успешно распознанных во вводе.
+    :return: Список успешно распознанных целых чисел. Если корректных чисел нет - пустой список.
     """
-    raw = input("Введите целые числа через пробел: ").split()
+    print("Введите целые числа через пробел.")
+    print("Enter - завершить ввод.\n")
+
     numbers = []
-    for item in raw:
-        try:
-            numbers.append(int(item))
-        except ValueError:
-            print(f"'{item}' - не целое число, пропускаем.")
+
+    while True:
+        raw = input("Числа: ")
+
+        if not raw.strip():
+            break
+
+        for item in raw.split():
+            try:
+                numbers.append(int(item))
+            except ValueError:
+                print(f"'{item}' - не целое число, пропускаем. Вводите только числа.")
+
     return numbers
 
 
 if __name__ == "__main__":
-
     numbers = read_integers()
 
     if not numbers:
         print("Вы не ввели ни одного корректного числа.")
     else:
         print("\nРезультат:")
-        
         for n in numbers:
             print(f"{n:>6} : {classify(n)}")
+
+
+
             
