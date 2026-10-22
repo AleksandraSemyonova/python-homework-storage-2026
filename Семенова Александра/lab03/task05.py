@@ -13,11 +13,8 @@ def factorial(n):
     """
     Вычисляет факториал числа n.
 
-    :Args:
-        n: неотрицательное целое число.
-
-    :Returns:
-        Факториал числа n.
+    :param n: неотрицательное целое число.
+    :return: факториал числа n.
     """
     result = 1
     for i in range(2, n + 1):
@@ -32,11 +29,8 @@ def repeat(n):
     Перед каждым вызовом выводится сообщение с номером попытки.
     Возвращает список результатов всех вызовов.
 
-    :Args:
-        n: количество повторных вызовов функции.
-
-    :Returns:
-        Декоратор, оборачивающий исходную функцию.
+    :param n: количество повторных вызовов функции.
+    :return: декоратор, оборачивающий исходную функцию.
     """
     def decorator(func):
         @wraps(func)
@@ -57,32 +51,29 @@ def square(x):
     """
     Возвращает квадрат числа.
 
-    :Args:
-        x: число.
-
-    :Returns:
-        Квадрат числа x.
+    :param x: число.
+    :return: квадрат числа x.
     """
     return x ** 2
+
 
 @repeat(5)
 def random_square():
     """
     Генерирует случайное целое число от 0 до 100 и возвращает его квадрат.
 
-    :Returns:
-        Кортеж (число, квадрат числа).
+    :return: кортеж (число, квадрат числа).
     """
     n = random.randint(0, 100)
     return n, n ** 2
+
 
 @repeat(4)
 def random_factorial():
     """
     Генерирует случайное целое число от 0 до 50 и возвращает его факториал.
 
-    :Returns:
-        Кортеж (число, факториал числа).
+    :return: кортеж (число, факториал числа).
     """
     n = random.randint(MIN_RANDOM_VALUE, MAX_RANDOM_VALUE)
     return n, factorial(n)
@@ -96,13 +87,12 @@ if __name__ == "__main__":
 
     print("2. Вызов функции random_square() (диапазон 0–100):")
     result2 = random_square()
-    print(f"Результаты:")
+    print("Результаты:")
     for number, sq in result2:
         print(f"Квадрат {number} = {sq}\n")
 
     print("3. Вызов функции random_factorial() (диапазон 0–50):")
     result3 = random_factorial()
-    print(f"Результаты:")
+    print("Результаты:")
     for number, fact in result3:
         print(f"{number}! = {fact}")
-        
