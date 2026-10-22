@@ -13,6 +13,12 @@ DEFAULT_PRODUCTS = [
 
 
 def ask_yes_no(question):
+    """
+    Задаёт вопрос и принимает только 'да' или 'нет'.
+
+    :param question: текст вопроса для пользователя.
+    :return: True, если ответ 'да' или 'yes'; False, если 'нет' или 'no'.
+    """
     while True:
         answer = input(question).strip().lower()
         if answer in ("да", "yes"):
@@ -23,6 +29,13 @@ def ask_yes_no(question):
 
 
 def read_positive_int(prompt, error_msg):
+    """
+    Запрашивает у пользователя целое неотрицательное число.
+
+    :param prompt: текст приглашения ввода.
+    :param error_msg: сообщение об ошибке при невалидном вводе.
+    :return: введённое пользователем целое неотрицательное число.
+    """
     while True:
         value_str = input(prompt).strip()
         try:
@@ -36,6 +49,11 @@ def read_positive_int(prompt, error_msg):
 
 
 def read_discount():
+    """
+    Запрашивает размер скидки в процентах (от 0 до 100).
+
+    :return: целое число от 0 до 100 включительно.
+    """
     while True:
         value_str = input(f"Скидка в % ({MIN_DISCOUNT}–{MAX_DISCOUNT}): ").strip()
         try:
@@ -49,6 +67,13 @@ def read_discount():
 
 
 def input_products():
+    """
+    Интерактивно формирует список товаров со свойствами name, price, discount.
+
+    Ввод завершается, когда пользователь вводит одно из слов-стопов в поле названия.
+
+    :return: список словарей вида {'name': str, 'price': int, 'discount': int}.
+    """
     products = []
     print("\nВведите 'стоп' в поле названия, чтобы закончить.\n")
 
@@ -67,38 +92,25 @@ def input_products():
 
 
 def add_final_price(products):
+    """
+    Возвращает новый список товаров с добавленным полем 'final_price'.
+
+    :param products: список словарей с ключами 'price' и 'discount'.
+    :return: новый список словарей с добавленным ключом 'final_price'.
+    """
     return list(map(
         lambda p: {**p, "final_price": p["price"] * (100 - p["discount"]) / 100},
         products
     ))
 
 
-def merge(left, right, key_func):
-    result = []
-    i = j = 0
-    while i < len(left) and j < len(right):
-        if key_func(left[i]) <= key_func(right[j]):
-            result.append(left[i])
-            i += 1
-        else:
-            result.append(right[j])
-            j += 1
-    result.extend(left[i:])
-    result.extend(right[j:])
-    return result
-
-
-def merge_sort(arr, key_func):
-    if len(arr) <= 1:
-        return arr[:]
-    mid = len(arr) // 2
-    left = merge_sort(arr[:mid], key_func)
-    right = merge_sort(arr[mid:], key_func)
-    return merge(left, right, key_func)
-
-
 def print_catalog(products):
-    sorted_products = merge_sort(products, key=lambda p: p["final_price"])
+    """
+    Выводит отсортированный по итоговой цене каталог товаров.
+
+    :param products: список словарей с ключами 'name', 'price', 'discount', 'final_price'.
+    """
+    sorted_products = sorted(products, key=lambda p: p["final_price"])
 
     print(f"{'Название':<12} {'Цена':>8} {'Скидка':>7} {'Итог':>10}")
     for p in sorted_products:
@@ -107,12 +119,13 @@ def print_catalog(products):
 
 
 if __name__ == "__main__":
+    products = []
+
     want_custom = ask_yes_no("Хотите добавить свои товары? (да/нет): ")
 
-    products = []
     if want_custom:
         products = input_products()
-        
+
     if not products:
         print("Список пуст, использую значения по умолчанию.\n")
         products = DEFAULT_PRODUCTS
@@ -120,5 +133,5 @@ if __name__ == "__main__":
     products_with_final = add_final_price(products)
     print_catalog(products_with_final)
 
-    input("\nНажмите Enter для выхода")
+    input("\nНажмите Enter для выхода.")
 
