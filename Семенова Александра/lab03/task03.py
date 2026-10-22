@@ -9,15 +9,12 @@ MAX_VALUE = 100
 def random_list(size, min_val, max_val):
     """
     Генерирует список случайных целых чисел.
-    
-    :Args:
-    size - количество элементов в списке;
-    max_val - минимальное значение;
-    min_val - максимальное значение;
 
-    :Return: список случайных чисел
+    :param size: количество элементов в списке.
+    :param min_val: минимальное значение.
+    :param max_val: максимальное значение.
+    :return: список случайных чисел.
     """
-
     return [random.randint(min_val, max_val) for _ in range(size)]
 
 if __name__ == "__main__":
@@ -47,4 +44,4 @@ if __name__ == "__main__":
 
     print(f"Оба условия ({len(both_conditions)} чисел):")
     print(both_conditions)
-    
+
