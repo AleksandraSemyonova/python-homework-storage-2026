@@ -14,9 +14,6 @@ class Transport:
     """
     Базовый класс для любого транспорта.
 
-    Хранит скорость и вместимость. Поля объявлены как protected
-    (_speed, _capacity), потому что к ним обращаются наследники
-    через super() и свойства.
     """
 
     def __init__(self, speed, capacity):
@@ -80,9 +77,6 @@ class Transport:
         """
         Создаёт объект класса из словаря.
 
-        Значения читаются через .get(), чтобы при отсутствии ключа
-        не возникал KeyError, а понятная ValueError.
-
         :param data: словарь с ключами 'speed' и 'capacity'.
         :return: новый объект класса Transport.
         :raises ValueError: если ключи 'speed'/'capacity' отсутствуют.
@@ -97,9 +91,6 @@ class Transport:
         """
         Возвращает строковое представление транспорта.
 
-        Магический метод __str__ автоматически вызывается print(obj)
-        и str(obj), поэтому его и используют вместо get_info().
-
         :return: строка с описанием транспорта.
         """
         return f"Скорость: {self.speed}, Вместимость: {self.capacity}"
@@ -108,9 +99,6 @@ class Transport:
 class Bus(Transport):
     """
     Класс автобуса, наследующий Transport.
-
-    Поле route объявлено как private (__route), потому что оно
-    уникально для автобуса и не нужно наследникам.
     """
 
     def __init__(self, speed, capacity, route):
@@ -155,9 +143,6 @@ class Bus(Transport):
 class Truck(Transport):
     """
     Класс грузовика, наследующий Transport.
-
-    Поле load_capacity объявлено как private (__load_capacity),
-    потому что оно уникально для грузовика.
     """
 
     def __init__(self, speed, capacity, load_capacity):
@@ -214,9 +199,6 @@ class Truck(Transport):
 class Taxi(Transport):
     """
     Класс такси, наследующий Transport.
-
-    Поле tariff объявлено как private (__tariff), потому что оно
-    уникально для такси.
     """
 
     def __init__(self, speed, capacity, tariff):
