@@ -1,276 +1,620 @@
 #!/usr/bin/env python3
 
-MAX_WITHDRAW_PERCENT = 0.5  
-INTEREST_DIVISOR = 100      
-TEST_WITHDRAW_AMOUNT = 100 
-TEST_BIG_WITHDRAW_PERCENT = 0.6  
+from abc import ABC, abstractmethod
+import random
+
+VALID_GENDERS = ("мужской", "женский", "М", "Ж", "male", "female")
+RETIREMENT_AGE = 60
+ADULT_AGE = 18
+MIN_AGE = 0
+MAX_AGE = 100
+MONTHS_IN_YEAR = 12
 
 
-class BankAccount:
+class Person(ABC):
     """
-    Базовый класс банковского счёта.
+    Абстрактный базовый класс для человека.
 
-    Хранит владельца, баланс и историю операций.
-    Поля объявлены как protected, так как наследники
-    обращаются к ним через свойства и методы.
+    Хранит имя, пол и возраст. Поля объявлены как protected
+    (_name, _gender, _age), потому что к ним обращаются наследники
+    через унаследованные property и через super().__str__().
     """
 
-    def __init__(self, owner, initial_balance=0):
+    def __init__(self, name, gender, age):
         """
-        Инициализирует банковский счёт.
+        Инициализирует человека.
 
-        :param owner: имя владельца счёта (непустая строка).
-        :param initial_balance: начальный баланс (неотрицательное число).
-        :raises ValueError: если owner или initial_balance невалидны.
+        :param name: имя человека (непустая строка).
+        :param gender: пол человека (одно из допустимых значений).
+        :param age: возраст человека (число от 0 до 100).
+        :raises ValueError: если name, gender или age невалидны.
         """
-        self._owner = None
-        self._balance = 0
-        self._history = []
-        self.owner = owner
-        if initial_balance > 0:
-            self.deposit(initial_balance)
+        self._name = None
+        self._gender = None
+        self._age = None
+        self.name = name
+        self.gender = gender
+        self.age = age
 
     @property
-    def owner(self):
-        """Возвращает имя владельца счёта."""
-        return self._owner
+    def name(self):
+        """Возвращает имя человека."""
+        return self._name
 
-    @owner.setter
-    def owner(self, value):
+    @name.setter
+    def name(self, value):
         """
-        Устанавливает имя владельца с валидацией.
+        Устанавливает имя с валидацией.
 
-        :param value: новое имя владельца.
+        :param value: новое значение имени.
         :raises ValueError: если value не строка или пустая.
         """
         if type(value) is not str or not value.strip():
-            raise ValueError("Имя владельца должно быть непустой строкой.")
-        self._owner = value
+            raise ValueError("Имя должно быть непустой строкой.")
+        self._name = value.strip()
 
     @property
-    def balance(self):
-        """Возвращает текущий баланс счёта."""
-        return self._balance
+    def gender(self):
+        """Возвращает пол человека."""
+        return self._gender
+
+    @gender.setter
+    def gender(self, value):
+        """
+        Устанавливает пол с валидацией.
+
+        :param value: новое значение пола.
+        :raises ValueError: если value не строка или недопустимое значение.
+        """
+        if type(value) is not str or value.lower() not in VALID_GENDERS:
+            raise ValueError(
+                f"Недопустимое значение пола. Допустимые: {VALID_GENDERS}"
+            )
+        self._gender = value.lower()
 
     @property
-    def history(self):
-        """Возвращает копию истории операций."""
-        return self._history.copy()
+    def age(self):
+        """Возвращает возраст человека."""
+        return self._age
 
-    def deposit(self, amount):
+    @age.setter
+    def age(self, value):
         """
-        Пополняет счёт на указанную сумму.
+        Устанавливает возраст с валидацией.
 
-        :param amount: сумма пополнения (положительное число).
-        :return: True, если операция успешна; False, если amount невалиден.
+        :param value: новое значение возраста.
+        :raises ValueError: если value не число или вне диапазона.
         """
-        if type(amount) not in (int, float) or amount <= 0:
-            print("Ошибка: сумма пополнения должна быть положительным числом.")
-            return False
+        if type(value) not in (int, float) or value < MIN_AGE or value > MAX_AGE:
+            raise ValueError(
+                f"Возраст должен быть числом от {MIN_AGE} до {MAX_AGE}."
+            )
+        self._age = value
 
-        self._balance += amount
-        self._history.append(f"Пополнение: +{amount}. Баланс: {self._balance}")
-        return True
-
-    def withdraw(self, amount):
+    def is_adult(self):
         """
-        Снимает указанную сумму со счёта.
+        Проверяет совершеннолетие.
 
-        :param amount: сумма снятия (положительное число).
-        :return: True, если операция успешна; False, если amount невалиден или недостаточно средств.
+        :return: True, если возраст >= ADULT_AGE; False в противном случае.
         """
-        if type(amount) not in (int, float) or amount <= 0:
-            print("Ошибка: сумма снятия должна быть положительным числом.")
-            return False
-
-        if amount > self._balance:
-            print(f"Ошибка: недостаточно средств. Баланс: {self._balance}.")
-            return False
-
-        self._balance -= amount
-        self._history.append(f"Снятие: -{amount}. Баланс: {self._balance}")
-        return True
+        return self.age >= ADULT_AGE
 
     @classmethod
     def from_dict(cls, data):
         """
-        Создаёт объект счёта из словаря.
+        Создаёт объект класса из словаря.
 
-        Значения читаются через .get(), чтобы при отсутствии ключа
-        не возникал KeyError, а понятная ValueError.
+        Значения проверяются через .get(), чтобы при отсутствии
+        обязательных ключей не возникал KeyError, а понятная ValueError.
 
-        :param data: словарь с ключами 'owner' и 'balance'.
-        :return: новый объект BankAccount.
-        :raises ValueError: если ключ 'owner' отсутствует.
+        :param data: словарь с ключами 'name', 'gender' и полями класса.
+        :return: новый объект класса.
+        :raises ValueError: если ключи 'name' или 'gender' отсутствуют.
         """
-        owner = data.get("owner")
-        balance = data.get("balance", 0)
-        if owner is None:
-            raise ValueError("В словаре отсутствует ключ 'owner'.")
-        return cls(owner=owner, initial_balance=balance)
+        name = data.get("name")
+        gender = data.get("gender")
+        if name is None or gender is None:
+            raise ValueError(
+                "В словаре отсутствуют обязательные ключи 'name' или 'gender'."
+            )
+        return cls(**data)
 
+    @abstractmethod
     def __str__(self):
         """
-        Возвращает строковое представление счёта.
+        Возвращает строковое представление человека.
 
         Магический метод __str__ автоматически вызывается print(obj)
-        и str(obj), поэтому его используют вместо кастомных методов.
+        и str(obj), поэтому он используется вместо кастомных методов
+        вроде get_info(). Объявлен абстрактным, чтобы каждый наследник
+        реализовал собственное представление, но базовая реализация
+        доступна через super().
 
-        :return: строка с описанием счёта.
+        :return: строка с описанием.
         """
-        return f"Владелец: {self._owner}, Баланс: {self._balance}"
+        return f"Имя: {self.name}, Пол: {self.gender}, Возраст: {self.age}"
 
 
-class SavingsAccount(BankAccount):
+class Employee(Person):
     """
-    Класс сберегательного счёта, наследующий BankAccount.
+    Класс сотрудника, наследующий Person.
 
-    Добавляет процентную ставку и ограничение на снятие.
-    Поле rate объявлено как private, так как оно уникально
-    для этого класса и не используется другими наследниками.
+    Добавляет должность, зарплату и ежемесячные расходы.
+    Поля объявлены как protected, потому что к ним обращаются
+    наследники (Manager, Developer, Designer) через super().__str__().
     """
 
-    def __init__(self, owner, initial_balance=0, rate=0):
+    def __init__(self, name, gender, age, position, salary, monthly_expenses):
         """
-        Инициализирует сберегательный счёт.
+        Инициализирует сотрудника.
 
-        :param owner: имя владельца счёта.
-        :param initial_balance: начальный баланс.
-        :param rate: процентная ставка в процентах (неотрицательное число).
-        :raises ValueError: если owner или rate невалидны.
+        :param name: имя сотрудника.
+        :param gender: пол сотрудника.
+        :param age: возраст сотрудника.
+        :param position: должность (непустая строка).
+        :param salary: зарплата (неотрицательное число).
+        :param monthly_expenses: ежемесячные расходы (неотрицательное число).
+        :raises ValueError: если любой из параметров невалиден.
         """
-        super().__init__(owner, initial_balance)
-        self.__rate = None
-        self.rate = rate
+        super().__init__(name, gender, age)
+        self._position = None
+        self._salary = None
+        self._monthly_expenses = None
+        self.position = position
+        self.salary = salary
+        self.monthly_expenses = monthly_expenses
 
     @property
-    def rate(self):
-        """Возвращает процентную ставку."""
-        return self.__rate
+    def position(self):
+        """Возвращает должность."""
+        return self._position
 
-    @rate.setter
-    def rate(self, value):
+    @position.setter
+    def position(self, value):
         """
-        Устанавливает процентную ставку с валидацией.
+        Устанавливает должность с валидацией.
 
-        :param value: новое значение ставки.
+        :param value: новое значение должности.
+        :raises ValueError: если value не строка или пустая.
+        """
+        if type(value) is not str or not value.strip():
+            raise ValueError("Должность должна быть непустой строкой.")
+        self._position = value.strip()
+
+    @property
+    def salary(self):
+        """Возвращает зарплату."""
+        return self._salary
+
+    @salary.setter
+    def salary(self, value):
+        """
+        Устанавливает зарплату с валидацией.
+
+        :param value: новое значение зарплаты.
         :raises ValueError: если value не число или отрицательное.
         """
         if type(value) not in (int, float) or value < 0:
-            raise ValueError("Процентная ставка должна быть неотрицательным числом.")
-        self.__rate = value
+            raise ValueError("Зарплата должна быть неотрицательным числом.")
+        self._salary = value
 
-    def add_interest(self):
+    @property
+    def monthly_expenses(self):
+        """Возвращает ежемесячные расходы."""
+        return self._monthly_expenses
+
+    @monthly_expenses.setter
+    def monthly_expenses(self, value):
         """
-        Начисляет проценты на текущий баланс.
+        Устанавливает расходы с валидацией.
 
-        :return: сумма начисленных процентов.
+        :param value: новое значение расходов.
+        :raises ValueError: если value не число или отрицательное.
         """
-        interest = self._balance * self.__rate / INTEREST_DIVISOR
-        if interest > 0:
-            self.deposit(interest)
-        return interest
+        if type(value) not in (int, float) or value < 0:
+            raise ValueError("Расходы должны быть неотрицательным числом.")
+        self._monthly_expenses = value
 
-    def withdraw(self, amount):
+    def income_for_months(self, n):
         """
-        Снимает сумму со счёта (не более 50% баланса за одну операцию).
+        Оценивает приток денег за N месяцев.
 
-        :param amount: сумма снятия (положительное число).
-        :return: True, если операция успешна; False, если amount невалиден,
-                 превышает 50% баланса или недостаточно средств.
+        :param n: количество месяцев (положительное целое).
+        :return: сумма притока за N месяцев.
+        :raises ValueError: если n не положительное целое.
         """
-        if type(amount) not in (int, float) or amount <= 0:
-            print("Ошибка: сумма снятия должна быть положительным числом.")
-            return False
-
-        max_withdraw = self._balance * MAX_WITHDRAW_PERCENT
-        if amount > max_withdraw:
-            print(
-                f"Ошибка: со сберегательного счёта нельзя снять более "
-                f"{MAX_WITHDRAW_PERCENT * 100}% баланса ({max_withdraw})."
+        if type(n) is not int or n <= 0:
+            raise ValueError(
+                "Количество месяцев должно быть положительным целым числом."
             )
-            return False
+        return self.salary * n
 
-        if amount > self._balance:
-            print(f"Ошибка: недостаточно средств. Баланс: {self._balance}.")
-            return False
+    def check_survival(self):
+        """
+        Проверяет, хватает ли зарплаты на расходы.
 
-        self._balance -= amount
-        self._history.append(f"Снятие (Сбер): -{amount}. Баланс: {self._balance}")
-        return True
+        Возвращает булев результат, а не выбрасывает исключение,
+        потому что ситуация "расходы больше зарплаты" — это нормальная
+        бизнес-ситуация, а не ошибка программы.
+
+        :return: True, если сотрудник "выживает"; False в противном случае.
+        """
+        return self.salary >= self.monthly_expenses
+
+    def savings_until_retirement(self):
+        """
+        Рассчитывает, сколько человек скопит до пенсии.
+
+        :return: сумма накоплений до пенсионного возраста.
+        """
+        if self.age >= RETIREMENT_AGE:
+            return 0
+        years_left = RETIREMENT_AGE - self.age
+        months_left = years_left * MONTHS_IN_YEAR
+        monthly_savings = self.salary - self.monthly_expenses
+        if monthly_savings <= 0:
+            return 0
+        return monthly_savings * months_left
 
     def __str__(self):
         """
-        Возвращает строковое представление сберегательного счёта.
+        Возвращает строку с информацией о сотруднике.
 
-        :return: строка с описанием счёта.
+        :return: строка с описанием.
         """
-        return f"{super().__str__()}, Ставка: {self.__rate}%"
+        return f"{super().__str__()}, Должность: {self.position}, " \
+               f"Зарплата: {self.salary}, Расходы: {self.monthly_expenses}"
+
+
+class Manager(Employee):
+    """
+    Класс менеджера, наследующий Employee.
+
+    Добавляет список подчинённых. Поле subordinates объявлено
+    как private (__subordinates), потому что оно уникально для
+    менеджера и не используется другими наследниками.
+    """
+
+    def __init__(self, name, gender, age, position, salary,
+                 monthly_expenses, subordinates=None):
+        """
+        Инициализирует менеджера.
+
+        :param name: имя менеджера.
+        :param gender: пол менеджера.
+        :param age: возраст менеджера.
+        :param position: должность.
+        :param salary: зарплата.
+        :param monthly_expenses: расходы.
+        :param subordinates: список подчинённых (по умолчанию пустой).
+        :raises ValueError: если subordinates не список.
+        """
+        super().__init__(name, gender, age, position, salary, monthly_expenses)
+        self.__subordinates = None
+        self.subordinates = subordinates if subordinates is not None else []
+
+    @property
+    def subordinates(self):
+        """Возвращает список подчинённых."""
+        return self.__subordinates
+
+    @subordinates.setter
+    def subordinates(self, value):
+        """
+        Устанавливает список подчинённых.
+
+        :param value: список подчинённых.
+        :raises ValueError: если value не список.
+        """
+        if type(value) is not list:
+            raise ValueError("Подчинённые должны быть списком.")
+        self.__subordinates = value
+
+    def add_subordinate(self, employee):
+        """
+        Добавляет подчинённого.
+
+        :param employee: сотрудник.
+        """
+        self.subordinates.append(employee)
+        print(f"{employee.name} добавлен в подчинение к {self.name}.")
+
+    def remove_subordinate(self, employee):
+        """
+        Удаляет подчинённого.
+
+        :param employee: сотрудник.
+        """
+        if employee in self.subordinates:
+            self.subordinates.remove(employee)
+            print(f"{employee.name} уволен из подчинения {self.name}.")
+        else:
+            print(f"{employee.name} не числится в подчинении {self.name}.")
+
+    def hold_meeting(self, topic):
+        """
+        Проводит митинг с подчинёнными.
+
+        :param topic: тема митинга.
+        """
+        print(f"\n=== Митинг у {self.name} ===")
+        print(f"Тема: {topic}")
+        print(f"Участники ({len(self.subordinates)} чел.):")
+        for sub in self.subordinates:
+            print(f" - {sub.name} ({sub.position})")
+
+    def work(self):
+        """Метод работы менеджера."""
+        print(
+            f"{self.name} (Manager) проводит совещание с "
+            f"{len(self.subordinates)} подчинёнными."
+        )
+
+    def __str__(self):
+        """Возвращает информацию о менеджере."""
+        return f"{super().__str__()}, Подчинённых: {len(self.subordinates)}"
+
+
+class Developer(Employee):
+    """
+    Класс разработчика, наследующий Employee.
+
+    Добавляет список языков программирования. Поле languages
+    объявлено как private (__languages), потому что оно уникально
+    для разработчика.
+    """
+
+    def __init__(self, name, gender, age, position, salary,
+                 monthly_expenses, languages=None):
+        """
+        Инициализирует разработчика.
+
+        :param name: имя разработчика.
+        :param gender: пол разработчика.
+        :param age: возраст разработчика.
+        :param position: должность.
+        :param salary: зарплата.
+        :param monthly_expenses: расходы.
+        :param languages: список языков программирования.
+        :raises ValueError: если languages не список.
+        """
+        super().__init__(name, gender, age, position, salary, monthly_expenses)
+        self.__languages = None
+        self.languages = languages if languages is not None else []
+
+    @property
+    def languages(self):
+        """Возвращает список языков."""
+        return self.__languages
+
+    @languages.setter
+    def languages(self, value):
+        """
+        Устанавливает список языков.
+
+        :param value: список языков.
+        :raises ValueError: если value не список.
+        """
+        if type(value) is not list:
+            raise ValueError("Языки должны быть списком.")
+        self.__languages = value
+
+    def add_language(self, language):
+        """
+        Добавляет язык программирования.
+
+        :param language: название языка.
+        :raises ValueError: если language не строка или пустая.
+        """
+        if type(language) is not str or not language.strip():
+            raise ValueError("Язык должен быть непустой строкой.")
+        if language not in self.languages:
+            self.languages.append(language)
+
+    def write_code(self):
+        """
+        Пишет код на случайном языке из списка.
+
+        :return: выбранный язык или None, если список пуст.
+        """
+        if not self.languages:
+            print(f"{self.name} не знает ни одного языка программирования.")
+            return None
+        lang = random.choice(self.languages)
+        print(f"{self.name} пишет код на {lang}.")
+        return lang
+
+    def work(self):
+        """Метод работы разработчика."""
+        self.write_code()
+
+    def __str__(self):
+        """Возвращает информацию о разработчике."""
+        langs = ", ".join(self.languages) if self.languages else "нет"
+        return f"{super().__str__()}, Языки: {langs}"
+
+
+class Designer(Employee):
+    """
+    Класс дизайнера, наследующий Employee.
+
+    Добавляет список инструментов. Поле tools объявлено как
+    private (__tools), потому что оно уникально для дизайнера.
+    """
+
+    def __init__(self, name, gender, age, position, salary,
+                 monthly_expenses, tools=None):
+        """
+        Инициализирует дизайнера.
+
+        :param name: имя дизайнера.
+        :param gender: пол дизайнера.
+        :param age: возраст дизайнера.
+        :param position: должность.
+        :param salary: зарплата.
+        :param monthly_expenses: расходы.
+        :param tools: список инструментов.
+        :raises ValueError: если tools не список.
+        """
+        super().__init__(name, gender, age, position, salary, monthly_expenses)
+        self.__tools = None
+        self.tools = tools if tools is not None else []
+
+    @property
+    def tools(self):
+        """Возвращает список инструментов."""
+        return self.__tools
+
+    @tools.setter
+    def tools(self, value):
+        """
+        Устанавливает список инструментов.
+
+        :param value: список инструментов.
+        :raises ValueError: если value не список.
+        """
+        if type(value) is not list:
+            raise ValueError("Инструменты должны быть списком.")
+        self.__tools = value
+
+    def add_tool(self, tool):
+        """
+        Добавляет инструмент.
+
+        :param tool: название инструмента.
+        :raises ValueError: если tool не строка или пустая.
+        """
+        if type(tool) is not str or not tool.strip():
+            raise ValueError("Инструмент должен быть непустой строкой.")
+        if tool not in self.tools:
+            self.tools.append(tool)
+
+    def create_mockup(self, project_name):
+        """
+        Создаёт макет проекта.
+
+        :param project_name: название проекта.
+        """
+        if not self.tools:
+            print(f"{self.name} не имеет инструментов для работы.")
+            return
+        tool = random.choice(self.tools)
+        print(f"{self.name} создаёт макет '{project_name}' с помощью {tool}.")
+
+    def work(self):
+        """Метод работы дизайнера."""
+        self.create_mockup("Новый проект")
+
+    def __str__(self):
+        """Возвращает информацию о дизайнере."""
+        tools = ", ".join(self.tools) if self.tools else "нет"
+        return f"{super().__str__()}, Инструменты: {tools}"
 
 
 if __name__ == "__main__":
-    print("=== 1. Создание объектов ===")
-    account = BankAccount("Иван", 1500)
-    savings = SavingsAccount("Мария", 6000, rate=5)
-    account2 = BankAccount("Пётр", 2500)
+    print("=== 1. Создание объектов через конструктор ===")
+    manager = Manager(
+        "Анна", "женский", 35, "Руководитель отдела", 150000, 60000
+    )
+    dev = Developer(
+        "Иван", "мужской", 28, "Senior Developer", 120000, 50000,
+        ["JavaScript", "С"]
+    )
+    designer = Designer(
+        "Мария", "женский", 30, "UI/UX Designer", 100000, 45000,
+        ["Figma", "Photoshop", "Illustrator"]
+    )
 
-    print(account)
-    print(savings)
-    print(account2)
+    print(manager)
+    print(dev)
+    print(designer)
 
-    print("\n=== 2. Корректное пополнение и снятие ===")
-    account.deposit(500)
-    account.withdraw(200)
-    print(f"Баланс {account.owner}: {account.balance}")
+    print("\n=== 2. Создание объекта через классовый метод from_dict ===")
+    data = {
+        "name": "Пётр", "gender": "мужской", "age": 45,
+        "position": "Аналитик", "salary": 90000, "monthly_expenses": 50000
+    }
+    analyst = Employee.from_dict(data)
+    print(analyst)
 
-    savings.deposit(1000)
-    savings.withdraw(500)
-    print(f"Баланс {savings.owner}: {savings.balance}")
+    print("\n=== 3. Проверка совершеннолетия ===")
+    print(f"{dev.name} совершеннолетний: {dev.is_adult()}")
+    young = Employee("Лена", "женский", 16, "Стажёр", 0, 0)
+    print(f"{young.name} совершеннолетняя: {young.is_adult()}")
 
-    print("\n=== 3. Ошибки: отрицательная сумма и превышение баланса ===")
-    account.deposit(-100)
-    account.withdraw(-50)
-    account.withdraw(100000)
-
-    print("\n=== 4. Невозможность изменить баланс напрямую ===")
+    print("\n=== 4. Попытка задать невалидные данные ===")
     try:
-        account.balance = 999999
-    except AttributeError as e:
+        dev.age = -5
+    except ValueError as e:
         print(f"Ошибка: {e}")
 
-    print(f"Баланс остался: {account.balance}")
+    try:
+        manager.gender = "робот"
+    except ValueError as e:
+        print(f"Ошибка: {e}")
 
-    print("\n=== 5. Вывод истории операций ===")
-    print(f"История {account.owner}:")
-    for entry in account.history:
-        print(f"  {entry}")
+    try:
+        designer.salary = -1000
+    except ValueError as e:
+        print(f"Ошибка: {e}")
 
-    print(f"\nИстория {savings.owner}:")
-    for entry in savings.history:
-        print(f"  {entry}")
+    print("\n=== 5. Приток денег за N месяцев ===")
+    print(f"Доход {dev.name} за 6 месяцев: {dev.income_for_months(6)}")
+    print(
+        f"Доход {designer.name} за 12 месяцев: "
+        f"{designer.income_for_months(12)}"
+    )
 
-    print("\n=== 6. Начисление процентов на сберегательный счёт ===")
-    print(f"Баланс до начисления: {savings.balance}")
-    interest = savings.add_interest()
-    print(f"Начислено процентов: {interest}")
-    print(f"Баланс после начисления: {savings.balance}")
+    print("\n=== 6. Проверка выживания ===")
+    if dev.check_survival():
+        print(f"{dev.name} финансово стабилен.")
+    else:
+        print(f"{dev.name} тратит больше, чем получает.")
 
-    print("\n=== 7. Полиморфное поведение метода снятия ===")
-    accounts = (account, savings)
+    print("\n=== 7. Попытка 'умереть' от расходов ===")
+    poor_dev = Developer("Бедный Вася", "мужской", 25, "Junior", 30000, 50000)
+    if poor_dev.check_survival():
+        print(f"{poor_dev.name} финансово стабилен.")
+    else:
+        print(
+            f"{poor_dev.name} тратит {poor_dev.monthly_expenses} в месяц, "
+            f"а получает {poor_dev.salary}. "
+            f"Сотрудник 'умер' от финансового кризиса!"
+        )
 
-    for acc in accounts:
-        print(f"\n{type(acc).__name__} ({acc.owner}), баланс: {acc.balance}")
-        acc.withdraw(TEST_WITHDRAW_AMOUNT)
-        print(f"После снятия {TEST_WITHDRAW_AMOUNT}: {acc.balance}")
+    print("\n=== 8. Накопления до пенсии ===")
+    print(f"{dev.name} скопит до пенсии: {dev.savings_until_retirement()}")
+    print(f"{manager.name} скопит до пенсии: {manager.savings_until_retirement()}")
 
-    print("\n=== 8. Попытка снять более 50% со сберегательного счёта ===")
-    print(f"Баланс {savings.owner}: {savings.balance}")
-    big_amount = savings.balance * TEST_BIG_WITHDRAW_PERCENT
-    savings.withdraw(big_amount)
+    print("\n=== 9. Работа Manager ===")
+    manager.add_subordinate(dev)
+    manager.add_subordinate(designer)
+    manager.hold_meeting("Обсуждение нового проекта")
+    manager.remove_subordinate(designer)
 
-    print("\n=== 9. Проверка, что history возвращает копию ===")
-    history_copy = account.history
-    history_copy.append("Попытка подменить историю")
-    print(f"Реальная история: {account.history}")
-    print("Копия не изменила внутренний список — защита работает.")
+    print("\n=== 10. Работа Developer ===")
+    dev.write_code()
+    dev.add_language("Rust")
+    dev.write_code()
+
+    print("\n=== 11. Работа Designer ===")
+    designer.create_mockup("Афиша")
+    designer.add_tool("Blender")
+    designer.create_mockup("Обложка альбома")
+
+    print("\n=== 12. Полиморфный вызов __str__ ===")
+    employees = (manager, dev, designer)
+    for emp in employees:
+        print(emp)
+
+    print("\n=== 13. Полиморфный вызов метода work() ===")
+    for emp in employees:
+        print("\n=== 14. Проверка super() в цепочке наследования ===")
+        print("Manager.__str__() вызывает Employee.__str__() -> Person.__str__():")
+        print(manager)
+        print("Developer.__str__() вызывает Employee.__str__() -> Person.__str__():")
+        print(dev)
+        print("Designer.__str__() вызывает Employee.__str__() -> Person.__str__():")
+        print(designer)
+
 
