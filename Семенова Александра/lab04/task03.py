@@ -3,226 +3,294 @@
 from abc import ABC, abstractmethod
 import random
 
+VALID_GENDERS = ("мужской", "женский", "М", "Ж", "male", "female")
+RETIREMENT_AGE = 60
+ADULT_AGE = 18
+MIN_AGE = 0
+MAX_AGE = 100
+MONTHS_IN_YEAR = 12
+
 
 class Person(ABC):
     """
-    Базовый класс для человека.
+    Абстрактный базовый класс для человека.
 
-    :param name: имя человека.
-    :param gender: пол человека.
-    :param age: возраст человека.
+    Хранит имя, пол и возраст. Поля объявлены как protected
+    (_name, _gender, _age), потому что к ним обращаются наследники
+    через унаследованные property и через super().__str__().
     """
 
-    VALID_GENDERS = ("мужской", "женский", "М", "Ж", "male", "female")
-    RETIREMENT_AGE = 60
-
-    
     def __init__(self, name, gender, age):
+        """
+        Инициализирует человека.
+
+        :param name: имя человека (непустая строка).
+        :param gender: пол человека (одно из допустимых значений).
+        :param age: возраст человека (число от 0 до 100).
+        :raises ValueError: если name, gender или age невалидны.
+        """
+        self._name = None
+        self._gender = None
+        self._age = None
         self.name = name
         self.gender = gender
         self.age = age
 
     @property
     def name(self):
-        return self.__name
+        """Возвращает имя человека."""
+        return self._name
 
     @name.setter
     def name(self, value):
-        """Устанавливает имя с валидацией."""
+        """
+        Устанавливает имя с валидацией.
+
+        :param value: новое значение имени.
+        :raises ValueError: если value не строка или пустая.
+        """
         if type(value) is not str or not value.strip():
             raise ValueError("Имя должно быть непустой строкой.")
-        self.__name = value.strip()
+        self._name = value.strip()
 
     @property
     def gender(self):
-        return self.__gender
+        """Возвращает пол человека."""
+        return self._gender
 
     @gender.setter
     def gender(self, value):
-        """Устанавливает пол с валидацией."""
-        if type(value) is not str or value.lower() not in self.VALID_GENDERS:
-            raise ValueError(f"Недопустимое значение пола. Допустимые: {self.VALID_GENDERS}")
-        self.__gender = value.lower()
-
-    def is_adult(self):
         """
-        Проверяет совершеннолетие.
+        Устанавливает пол с валидацией.
 
-        :return: True, если возраст >= 18; False в противном случае.
+        :param value: новое значение пола.
+        :raises ValueError: если value не строка или недопустимое значение.
         """
-        return self.age >= 18
-    
-    def get_info(self):  
-        """Возвращает строку с основной информацией о человеке."""
-        return f"Имя: {self.name}, Пол: {self.gender}, Возраст: {self.age}"
+        if type(value) is not str or value.lower() not in VALID_GENDERS:
+            raise ValueError(
+                f"Недопустимое значение пола. Допустимые: {VALID_GENDERS}"
+            )
+        self._gender = value.lower()
 
-    @classmethod
-    def from_variables(cls, name, gender, age):
-        """
-        Создаёт объект класса из переменных.
-
-        :param name: имя.
-        :param gender: пол.
-        :param age: возраст.
-        :return: новый объект класса.
-        """
-        return cls(name=name, gender=gender, age=age)
-    
     @property
     def age(self):
-        return self.__age
+        """Возвращает возраст человека."""
+        return self._age
 
     @age.setter
     def age(self, value):
-        """Устанавливает возраст с валидацией."""
-        if type(value) not in (int, float) or value < 0 or value > 100:
-            raise ValueError("Возраст должен быть числом от 0 до 100.")
-        self.__age = int(value)
+        """
+        Устанавливает возраст с валидацией.
+
+        :param value: новое значение возраста.
+        :raises ValueError: если value не число или вне диапазона.
+        """
+        if type(value) not in (int, float) or value < MIN_AGE or value > MAX_AGE:
+            raise ValueError(
+                f"Возраст должен быть числом от {MIN_AGE} до {MAX_AGE}."
+            )
+        self._age = value
 
     def is_adult(self):
         """
         Проверяет совершеннолетие.
 
-        :return: True, если возраст >= 18; False в противном случае.
+        :return: True, если возраст >= ADULT_AGE; False в противном случае.
         """
-        return self.age >= 18
+        return self.age >= ADULT_AGE
 
-    def get_info(self):
+    @classmethod
+    def from_dict(cls, data):
         """
-        Возвращает строку с основной информацией о человеке.
+        Создаёт объект класса из словаря.
+
+        Значения проверяются через .get(), чтобы при отсутствии
+        обязательных ключей не возникал KeyError, а понятная ValueError.
+
+        :param data: словарь с ключами 'name', 'gender' и полями класса.
+        :return: новый объект класса.
+        :raises ValueError: если ключи 'name' или 'gender' отсутствуют.
+        """
+        name = data.get("name")
+        gender = data.get("gender")
+        if name is None or gender is None:
+            raise ValueError(
+                "В словаре отсутствуют обязательные ключи 'name' или 'gender'."
+            )
+        return cls(**data)
+
+    @abstractmethod
+    def __str__(self):
+        """
+        Возвращает строковое представление человека.
+
+        Магический метод __str__ автоматически вызывается print(obj)
+        и str(obj), поэтому он используется вместо кастомных методов
+        вроде get_info(). Объявлен абстрактным, чтобы каждый наследник
+        реализовал собственное представление, но базовая реализация
+        доступна через super().
 
         :return: строка с описанием.
         """
         return f"Имя: {self.name}, Пол: {self.gender}, Возраст: {self.age}"
 
-    @classmethod
-    def from_variables(cls, name, gender, age):
-        """
-        Создаёт объект класса из переменных.
-
-        :param name: имя.
-        :param gender: пол.
-        :param age: возраст.
-        :return: новый объект класса.
-        """
-        return cls(name=name, gender=gender, age=age)
 
 class Employee(Person):
     """
     Класс сотрудника, наследующий Person.
 
-    :param name: имя.
-    :param gender: пол.
-    :param age: возраст.
-    :param position: должность.
-    :param salary: зарплата.
-    :param monthly_expenses: усреднённые расходы в месяц.
+    Добавляет должность, зарплату и ежемесячные расходы.
+    Поля объявлены как protected, потому что к ним обращаются
+    наследники (Manager, Developer, Designer) через super().__str__().
     """
 
     def __init__(self, name, gender, age, position, salary, monthly_expenses):
+        """
+        Инициализирует сотрудника.
+
+        :param name: имя сотрудника.
+        :param gender: пол сотрудника.
+        :param age: возраст сотрудника.
+        :param position: должность (непустая строка).
+        :param salary: зарплата (неотрицательное число).
+        :param monthly_expenses: ежемесячные расходы (неотрицательное число).
+        :raises ValueError: если любой из параметров невалиден.
+        """
         super().__init__(name, gender, age)
+        self._position = None
+        self._salary = None
+        self._monthly_expenses = None
         self.position = position
         self.salary = salary
         self.monthly_expenses = monthly_expenses
 
     @property
     def position(self):
-        return self.__position
+        """Возвращает должность."""
+        return self._position
 
     @position.setter
     def position(self, value):
-        """Устанавливает должность с валидацией."""
+        """
+        Устанавливает должность с валидацией.
+
+        :param value: новое значение должности.
+        :raises ValueError: если value не строка или пустая.
+        """
         if type(value) is not str or not value.strip():
             raise ValueError("Должность должна быть непустой строкой.")
-        self.__position = value.strip()
+        self._position = value.strip()
 
     @property
     def salary(self):
-        return self.__salary
+        """Возвращает зарплату."""
+        return self._salary
 
     @salary.setter
     def salary(self, value):
-        """Устанавливает зарплату с валидацией."""
+        """
+        Устанавливает зарплату с валидацией.
+
+        :param value: новое значение зарплаты.
+        :raises ValueError: если value не число или отрицательное.
+        """
         if type(value) not in (int, float) or value < 0:
             raise ValueError("Зарплата должна быть неотрицательным числом.")
-        self.__salary = value
+        self._salary = value
 
     @property
     def monthly_expenses(self):
-        return self.__monthly_expenses
+        """Возвращает ежемесячные расходы."""
+        return self._monthly_expenses
 
     @monthly_expenses.setter
     def monthly_expenses(self, value):
-        """Устанавливает расходы с валидацией."""
+        """
+        Устанавливает расходы с валидацией.
+
+        :param value: новое значение расходов.
+        :raises ValueError: если value не число или отрицательное.
+        """
         if type(value) not in (int, float) or value < 0:
             raise ValueError("Расходы должны быть неотрицательным числом.")
-        self.__monthly_expenses = value
-
+        self._monthly_expenses = value
 
     def income_for_months(self, n):
         """
         Оценивает приток денег за N месяцев.
 
-        :param n: количество месяцев.
+        :param n: количество месяцев (положительное целое).
         :return: сумма притока за N месяцев.
+        :raises ValueError: если n не положительное целое.
         """
         if type(n) is not int or n <= 0:
-            raise ValueError("Количество месяцев должно быть положительным целым числом.")
+            raise ValueError(
+                "Количество месяцев должно быть положительным целым числом."
+            )
         return self.salary * n
 
     def check_survival(self):
         """
         Проверяет, хватает ли зарплаты на расходы.
 
+        Возвращает булев результат, а не выбрасывает исключение,
+        потому что ситуация "расходы больше зарплаты" — это нормальная
+        бизнес-ситуация, а не ошибка программы.
+
         :return: True, если сотрудник "выживает"; False в противном случае.
         """
-        if self.monthly_expenses > self.salary:
-            raise RuntimeError(
-                f"{self.name} тратит {self.monthly_expenses} в месяц, "
-                f"а получает {self.salary}. Сотрудник 'умер' от финансового кризиса!"
-            )
-        return True
+        return self.salary >= self.monthly_expenses
 
-    
     def savings_until_retirement(self):
         """
         Рассчитывает, сколько человек скопит до пенсии.
 
         :return: сумма накоплений до пенсионного возраста.
         """
-        if self.age >= self.RETIREMENT_AGE:
+        if self.age >= RETIREMENT_AGE:
             return 0
-        years_left = self.RETIREMENT_AGE - self.age
-        months_left = years_left * 12
+        years_left = RETIREMENT_AGE - self.age
+        months_left = years_left * MONTHS_IN_YEAR
         monthly_savings = self.salary - self.monthly_expenses
         if monthly_savings <= 0:
             return 0
         return monthly_savings * months_left
 
-    def get_info(self):
+    def __str__(self):
         """
         Возвращает строку с информацией о сотруднике.
 
         :return: строка с описанием.
         """
-        return (f"{super().get_info()}, Должность: {self.position}, "
-                f"Зарплата: {self.salary}, Расходы: {self.monthly_expenses}")
+        return f"{super().__str__()}, Должность: {self.position}, " \
+               f"Зарплата: {self.salary}, Расходы: {self.monthly_expenses}"
+
 
 class Manager(Employee):
     """
     Класс менеджера, наследующий Employee.
 
-    :param name: имя.
-    :param gender: пол.
-    :param age: возраст.
-    :param position: должность.
-    :param salary: зарплата.
-    :param monthly_expenses: расходы.
-    :param subordinates: список подчинённых.
+    Добавляет список подчинённых. Поле subordinates объявлено
+    как private (__subordinates), потому что оно уникально для
+    менеджера и не используется другими наследниками.
     """
 
-    def __init__(self, name, gender, age, position, salary, monthly_expenses, subordinates=None):
+    def __init__(self, name, gender, age, position, salary,
+                 monthly_expenses, subordinates=None):
+        """
+        Инициализирует менеджера.
+
+        :param name: имя менеджера.
+        :param gender: пол менеджера.
+        :param age: возраст менеджера.
+        :param position: должность.
+        :param salary: зарплата.
+        :param monthly_expenses: расходы.
+        :param subordinates: список подчинённых (по умолчанию пустой).
+        :raises ValueError: если subordinates не список.
+        """
         super().__init__(name, gender, age, position, salary, monthly_expenses)
+        self.__subordinates = None
         self.subordinates = subordinates if subordinates is not None else []
 
     @property
@@ -232,7 +300,12 @@ class Manager(Employee):
 
     @subordinates.setter
     def subordinates(self, value):
-        """Устанавливает список подчинённых."""
+        """
+        Устанавливает список подчинённых.
+
+        :param value: список подчинённых.
+        :raises ValueError: если value не список.
+        """
         if type(value) is not list:
             raise ValueError("Подчинённые должны быть списком.")
         self.__subordinates = value
@@ -268,31 +341,45 @@ class Manager(Employee):
         print(f"Тема: {topic}")
         print(f"Участники ({len(self.subordinates)} чел.):")
         for sub in self.subordinates:
-            print(f" - {sub.name} ({sub.position})") 
+            print(f" - {sub.name} ({sub.position})")
 
     def work(self):
         """Метод работы менеджера."""
-        print(f"{self.name} (Manager) проводит совещание с {len(self.subordinates)} подчинёнными.")
+        print(
+            f"{self.name} (Manager) проводит совещание с "
+            f"{len(self.subordinates)} подчинёнными."
+        )
 
-    def get_info(self):
+    def __str__(self):
         """Возвращает информацию о менеджере."""
-        return f"{super().get_info()}, Подчинённых: {len(self.subordinates)}"
+        return f"{super().__str__()}, Подчинённых: {len(self.subordinates)}"
+
 
 class Developer(Employee):
     """
     Класс разработчика, наследующий Employee.
 
-    :param name: имя.
-    :param gender: пол.
-    :param age: возраст.
-    :param position: должность.
-    :param salary: зарплата.
-    :param monthly_expenses: расходы.
-    :param languages: список языков программирования.
+    Добавляет список языков программирования. Поле languages
+    объявлено как private (__languages), потому что оно уникально
+    для разработчика.
     """
 
-    def __init__(self, name, gender, age, position, salary, monthly_expenses, languages=None):
+    def __init__(self, name, gender, age, position, salary,
+                 monthly_expenses, languages=None):
+        """
+        Инициализирует разработчика.
+
+        :param name: имя разработчика.
+        :param gender: пол разработчика.
+        :param age: возраст разработчика.
+        :param position: должность.
+        :param salary: зарплата.
+        :param monthly_expenses: расходы.
+        :param languages: список языков программирования.
+        :raises ValueError: если languages не список.
+        """
         super().__init__(name, gender, age, position, salary, monthly_expenses)
+        self.__languages = None
         self.languages = languages if languages is not None else []
 
     @property
@@ -302,7 +389,12 @@ class Developer(Employee):
 
     @languages.setter
     def languages(self, value):
-        """Устанавливает список языков."""
+        """
+        Устанавливает список языков.
+
+        :param value: список языков.
+        :raises ValueError: если value не список.
+        """
         if type(value) is not list:
             raise ValueError("Языки должны быть списком.")
         self.__languages = value
@@ -312,6 +404,7 @@ class Developer(Employee):
         Добавляет язык программирования.
 
         :param language: название языка.
+        :raises ValueError: если language не строка или пустая.
         """
         if type(language) is not str or not language.strip():
             raise ValueError("Язык должен быть непустой строкой.")
@@ -322,7 +415,7 @@ class Developer(Employee):
         """
         Пишет код на случайном языке из списка.
 
-        :return: выбранный язык.
+        :return: выбранный язык или None, если список пуст.
         """
         if not self.languages:
             print(f"{self.name} не знает ни одного языка программирования.")
@@ -332,34 +425,54 @@ class Developer(Employee):
         return lang
 
     def work(self):
+        """Метод работы разработчика."""
         self.write_code()
 
-    def get_info(self):
-        return f"{super().get_info()}, Языки: {', '.join(self.languages) if self.languages else 'нет'}"   
+    def __str__(self):
+        """Возвращает информацию о разработчике."""
+        langs = ", ".join(self.languages) if self.languages else "нет"
+        return f"{super().__str__()}, Языки: {langs}"
+
 
 class Designer(Employee):
     """
     Класс дизайнера, наследующий Employee.
 
-    :param name: имя.
-    :param gender: пол.
-    :param age: возраст.
-    :param position: должность.
-    :param salary: зарплата.
-    :param monthly_expenses: расходы.
-    :param tools: список инструментов.
+    Добавляет список инструментов. Поле tools объявлено как
+    private (__tools), потому что оно уникально для дизайнера.
     """
 
-    def __init__(self, name, gender, age, position, salary, monthly_expenses, tools=None):
+    def __init__(self, name, gender, age, position, salary,
+                 monthly_expenses, tools=None):
+        """
+        Инициализирует дизайнера.
+
+        :param name: имя дизайнера.
+        :param gender: пол дизайнера.
+        :param age: возраст дизайнера.
+        :param position: должность.
+        :param salary: зарплата.
+        :param monthly_expenses: расходы.
+        :param tools: список инструментов.
+        :raises ValueError: если tools не список.
+        """
         super().__init__(name, gender, age, position, salary, monthly_expenses)
+        self.__tools = None
         self.tools = tools if tools is not None else []
 
     @property
     def tools(self):
+        """Возвращает список инструментов."""
         return self.__tools
 
     @tools.setter
     def tools(self, value):
+        """
+        Устанавливает список инструментов.
+
+        :param value: список инструментов.
+        :raises ValueError: если value не список.
+        """
         if type(value) is not list:
             raise ValueError("Инструменты должны быть списком.")
         self.__tools = value
@@ -369,6 +482,7 @@ class Designer(Employee):
         Добавляет инструмент.
 
         :param tool: название инструмента.
+        :raises ValueError: если tool не строка или пустая.
         """
         if type(tool) is not str or not tool.strip():
             raise ValueError("Инструмент должен быть непустой строкой.")
@@ -388,30 +502,44 @@ class Designer(Employee):
         print(f"{self.name} создаёт макет '{project_name}' с помощью {tool}.")
 
     def work(self):
+        """Метод работы дизайнера."""
         self.create_mockup("Новый проект")
 
-    def get_info(self):
-        return f"{super().get_info()}, Инструменты: {', '.join(self.tools) if self.tools else 'нет'}"
+    def __str__(self):
+        """Возвращает информацию о дизайнере."""
+        tools = ", ".join(self.tools) if self.tools else "нет"
+        return f"{super().__str__()}, Инструменты: {tools}"
+
 
 if __name__ == "__main__":
     print("=== 1. Создание объектов через конструктор ===")
-    manager = Manager("Анна", "женский", 35, "Руководитель отдела", 150000, 60000)
-    dev = Developer("Иван", "мужской", 28, "Senior Developer", 120000, 50000,
-                    ["JavaScript", "С"])
-    designer = Designer("Мария", "женский", 30, "UI/UX Designer", 100000, 45000,
-                        ["Figma", "Photoshop", "Illustrator"])
+    manager = Manager(
+        "Анна", "женский", 35, "Руководитель отдела", 150000, 60000
+    )
+    dev = Developer(
+        "Иван", "мужской", 28, "Senior Developer", 120000, 50000,
+        ["JavaScript", "С"]
+    )
+    designer = Designer(
+        "Мария", "женский", 30, "UI/UX Designer", 100000, 45000,
+        ["Figma", "Photoshop", "Illustrator"]
+    )
 
-    print(manager.get_info())
-    print(dev.get_info())
-    print(designer.get_info())
+    print(manager)
+    print(dev)
+    print(designer)
 
-    print("\n=== 2. Создание объекта через классовый метод ===")
-    person = Person.from_variables("Пётр", "мужской", 45)
-    print(person.get_info())
+    print("\n=== 2. Создание объекта через классовый метод from_dict ===")
+    data = {
+        "name": "Пётр", "gender": "мужской", "age": 45,
+        "position": "Аналитик", "salary": 90000, "monthly_expenses": 50000
+    }
+    analyst = Employee.from_dict(data)
+    print(analyst)
 
     print("\n=== 3. Проверка совершеннолетия ===")
     print(f"{dev.name} совершеннолетний: {dev.is_adult()}")
-    young = Person.from_variables("Лена", "женский", 16)
+    young = Employee("Лена", "женский", 16, "Стажёр", 0, 0)
     print(f"{young.name} совершеннолетняя: {young.is_adult()}")
 
     print("\n=== 4. Попытка задать невалидные данные ===")
@@ -432,21 +560,27 @@ if __name__ == "__main__":
 
     print("\n=== 5. Приток денег за N месяцев ===")
     print(f"Доход {dev.name} за 6 месяцев: {dev.income_for_months(6)}")
-    print(f"Доход {designer.name} за 12 месяцев: {designer.income_for_months(12)}")
+    print(
+        f"Доход {designer.name} за 12 месяцев: "
+        f"{designer.income_for_months(12)}"
+    )
 
     print("\n=== 6. Проверка выживания ===")
-    try:
-        dev.check_survival()
+    if dev.check_survival():
         print(f"{dev.name} финансово стабилен.")
-    except RuntimeError as e:
-        print(e)
+    else:
+        print(f"{dev.name} тратит больше, чем получает.")
 
     print("\n=== 7. Попытка 'умереть' от расходов ===")
     poor_dev = Developer("Бедный Вася", "мужской", 25, "Junior", 30000, 50000)
-    try:
-        poor_dev.check_survival()
-    except RuntimeError as e:
-        print(e)
+    if poor_dev.check_survival():
+        print(f"{poor_dev.name} финансово стабилен.")
+    else:
+        print(
+            f"{poor_dev.name} тратит {poor_dev.monthly_expenses} в месяц, "
+            f"а получает {poor_dev.salary}. "
+            f"Сотрудник 'умер' от финансового кризиса!"
+        )
 
     print("\n=== 8. Накопления до пенсии ===")
     print(f"{dev.name} скопит до пенсии: {dev.savings_until_retirement()}")
@@ -468,20 +602,20 @@ if __name__ == "__main__":
     designer.add_tool("Blender")
     designer.create_mockup("Обложка альбома")
 
-    print("\n=== 12. Полиморфный вызов метода get_info() ===")
-    employees = [manager, dev, designer]
+    print("\n=== 12. Полиморфный вызов __str__ ===")
+    employees = (manager, dev, designer)
     for emp in employees:
-        print(emp.get_info())
+        print(emp)
 
     print("\n=== 13. Полиморфный вызов метода work() ===")
     for emp in employees:
-        emp.work()
+        print("\n=== 14. Проверка super() в цепочке наследования ===")
+        print("Manager.__str__() вызывает Employee.__str__() -> Person.__str__():")
+        print(manager)
+        print("Developer.__str__() вызывает Employee.__str__() -> Person.__str__():")
+        print(dev)
+        print("Designer.__str__() вызывает Employee.__str__() -> Person.__str__():")
+        print(designer)
 
-    print("\n=== 14. Проверка super() в цепочке наследования ===")
-    print(f"\nManager.get_info() вызывает Employee.get_info() - Person.get_info():")
-    print(manager.get_info())
-    print(f"\nDeveloper.get_info() вызывает Employee.get_info() - Person.get_info():")
-    print(dev.get_info())
-    print(f"\nDesigner.get_info() вызывает Employee.get_info() - Person.get_info():")
-    print(designer.get_info())
+
 
