@@ -14,10 +14,6 @@ MONTHS_IN_YEAR = 12
 class Person(ABC):
     """
     Абстрактный базовый класс для человека.
-
-    Хранит имя, пол и возраст. Поля объявлены как protected
-    (_name, _gender, _age), потому что к ним обращаются наследники
-    через унаследованные property и через super().__str__().
     """
 
     def __init__(self, name, gender, age):
@@ -104,9 +100,6 @@ class Person(ABC):
         """
         Создаёт объект класса из словаря.
 
-        Значения проверяются через .get(), чтобы при отсутствии
-        обязательных ключей не возникал KeyError, а понятная ValueError.
-
         :param data: словарь с ключами 'name', 'gender' и полями класса.
         :return: новый объект класса.
         :raises ValueError: если ключи 'name' или 'gender' отсутствуют.
@@ -124,12 +117,6 @@ class Person(ABC):
         """
         Возвращает строковое представление человека.
 
-        Магический метод __str__ автоматически вызывается print(obj)
-        и str(obj), поэтому он используется вместо кастомных методов
-        вроде get_info(). Объявлен абстрактным, чтобы каждый наследник
-        реализовал собственное представление, но базовая реализация
-        доступна через super().
-
         :return: строка с описанием.
         """
         return f"Имя: {self.name}, Пол: {self.gender}, Возраст: {self.age}"
@@ -138,10 +125,7 @@ class Person(ABC):
 class Employee(Person):
     """
     Класс сотрудника, наследующий Person.
-
-    Добавляет должность, зарплату и ежемесячные расходы.
-    Поля объявлены как protected, потому что к ним обращаются
-    наследники (Manager, Developer, Designer) через super().__str__().
+    
     """
 
     def __init__(self, name, gender, age, position, salary, monthly_expenses):
@@ -233,10 +217,6 @@ class Employee(Person):
         """
         Проверяет, хватает ли зарплаты на расходы.
 
-        Возвращает булев результат, а не выбрасывает исключение,
-        потому что ситуация "расходы больше зарплаты" — это нормальная
-        бизнес-ситуация, а не ошибка программы.
-
         :return: True, если сотрудник "выживает"; False в противном случае.
         """
         return self.salary >= self.monthly_expenses
@@ -270,9 +250,6 @@ class Manager(Employee):
     """
     Класс менеджера, наследующий Employee.
 
-    Добавляет список подчинённых. Поле subordinates объявлено
-    как private (__subordinates), потому что оно уникально для
-    менеджера и не используется другими наследниками.
     """
 
     def __init__(self, name, gender, age, position, salary,
@@ -358,10 +335,7 @@ class Manager(Employee):
 class Developer(Employee):
     """
     Класс разработчика, наследующий Employee.
-
-    Добавляет список языков программирования. Поле languages
-    объявлено как private (__languages), потому что оно уникально
-    для разработчика.
+    
     """
 
     def __init__(self, name, gender, age, position, salary,
