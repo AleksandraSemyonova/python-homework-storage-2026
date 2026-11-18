@@ -1,94 +1,164 @@
 #!/usr/bin/env python3
 
+MAX_WITHDRAW_PERCENT = 0.5  
+INTEREST_DIVISOR = 100      
+TEST_WITHDRAW_AMOUNT = 100 
+TEST_BIG_WITHDRAW_PERCENT = 0.6  
+
+
 class BankAccount:
     """
-    Класс банковского счёта.
+    Базовый класс банковского счёта.
 
-    :param owner: имя владельца счёта.
-    :param initial_balance: начальный баланс.
+    Хранит владельца, баланс и историю операций.
+    Поля объявлены как protected, так как наследники
+    обращаются к ним через свойства и методы.
     """
 
     def __init__(self, owner, initial_balance=0):
-        self.__owner = owner
-        self.__balance = 0
-        self.__history = []
+        """
+        Инициализирует банковский счёт.
+
+        :param owner: имя владельца счёта (непустая строка).
+        :param initial_balance: начальный баланс (неотрицательное число).
+        :raises ValueError: если owner или initial_balance невалидны.
+        """
+        self._owner = None
+        self._balance = 0
+        self._history = []
+        self.owner = owner
         if initial_balance > 0:
             self.deposit(initial_balance)
 
     @property
     def owner(self):
-        return self.__owner
+        """Возвращает имя владельца счёта."""
+        return self._owner
+
+    @owner.setter
+    def owner(self, value):
+        """
+        Устанавливает имя владельца с валидацией.
+
+        :param value: новое имя владельца.
+        :raises ValueError: если value не строка или пустая.
+        """
+        if type(value) is not str or not value.strip():
+            raise ValueError("Имя владельца должно быть непустой строкой.")
+        self._owner = value
 
     @property
     def balance(self):
-        return self.__balance
+        """Возвращает текущий баланс счёта."""
+        return self._balance
 
     @property
     def history(self):
-        return self.__history.copy()
+        """Возвращает копию истории операций."""
+        return self._history.copy()
 
     def deposit(self, amount):
         """
         Пополняет счёт на указанную сумму.
 
-        :param amount: сумма пополнения.
-        :return: True, если операция успешна; False в противном случае.
+        :param amount: сумма пополнения (положительное число).
+        :return: True, если операция успешна; False, если amount невалиден.
         """
         if type(amount) not in (int, float) or amount <= 0:
-            print(f"Ошибка: сумма пополнения должна быть положительным числом.")
+            print("Ошибка: сумма пополнения должна быть положительным числом.")
             return False
 
-        self.__balance += amount
-        self.__history.append(f"Пополнение: +{amount}. Баланс: {self.__balance}")
+        self._balance += amount
+        self._history.append(f"Пополнение: +{amount}. Баланс: {self._balance}")
         return True
 
     def withdraw(self, amount):
         """
         Снимает указанную сумму со счёта.
 
-        :param amount: сумма снятия.
-        :return: True, если операция успешна; False в противном случае.
+        :param amount: сумма снятия (положительное число).
+        :return: True, если операция успешна; False, если amount невалиден или недостаточно средств.
         """
         if type(amount) not in (int, float) or amount <= 0:
-            print(f"Ошибка: сумма снятия должна быть положительным числом.")
+            print("Ошибка: сумма снятия должна быть положительным числом.")
             return False
 
-        if amount > self.__balance:
-            print(f"Ошибка: недостаточно средств. Баланс: {self.__balance}.")
+        if amount > self._balance:
+            print(f"Ошибка: недостаточно средств. Баланс: {self._balance}.")
             return False
 
-        self.__balance -= amount
-        self.__history.append(f"Снятие(Тинькофф): -{amount}. Баланс: {self.__balance}")
+        self._balance -= amount
+        self._history.append(f"Снятие: -{amount}. Баланс: {self._balance}")
         return True
 
     @classmethod
-    def from_owner(cls, owner, initial_balance=0):
+    def from_dict(cls, data):
         """
-        Создаёт объект счёта по имени владельца.
+        Создаёт объект счёта из словаря.
 
-        :param owner: имя владельца.
-        :param initial_balance: начальный баланс.
+        Значения читаются через .get(), чтобы при отсутствии ключа
+        не возникал KeyError, а понятная ValueError.
+
+        :param data: словарь с ключами 'owner' и 'balance'.
         :return: новый объект BankAccount.
+        :raises ValueError: если ключ 'owner' отсутствует.
         """
-        return cls(owner=owner, initial_balance=initial_balance)
+        owner = data.get("owner")
+        balance = data.get("balance", 0)
+        if owner is None:
+            raise ValueError("В словаре отсутствует ключ 'owner'.")
+        return cls(owner=owner, initial_balance=balance)
+
+    def __str__(self):
+        """
+        Возвращает строковое представление счёта.
+
+        Магический метод __str__ автоматически вызывается print(obj)
+        и str(obj), поэтому его используют вместо кастомных методов.
+
+        :return: строка с описанием счёта.
+        """
+        return f"Владелец: {self._owner}, Баланс: {self._balance}"
 
 
 class SavingsAccount(BankAccount):
     """
     Класс сберегательного счёта, наследующий BankAccount.
 
-    :param owner: имя владельца счёта.
-    :param initial_balance: начальный баланс.
-    :param rate: процентная ставка в процентах.
+    Добавляет процентную ставку и ограничение на снятие.
+    Поле rate объявлено как private, так как оно уникально
+    для этого класса и не используется другими наследниками.
     """
 
     def __init__(self, owner, initial_balance=0, rate=0):
+        """
+        Инициализирует сберегательный счёт.
+
+        :param owner: имя владельца счёта.
+        :param initial_balance: начальный баланс.
+        :param rate: процентная ставка в процентах (неотрицательное число).
+        :raises ValueError: если owner или rate невалидны.
+        """
         super().__init__(owner, initial_balance)
-        self.__rate = rate
+        self.__rate = None
+        self.rate = rate
 
     @property
     def rate(self):
+        """Возвращает процентную ставку."""
         return self.__rate
+
+    @rate.setter
+    def rate(self, value):
+        """
+        Устанавливает процентную ставку с валидацией.
+
+        :param value: новое значение ставки.
+        :raises ValueError: если value не число или отрицательное.
+        """
+        if type(value) not in (int, float) or value < 0:
+            raise ValueError("Процентная ставка должна быть неотрицательным числом.")
+        self.__rate = value
 
     def add_interest(self):
         """
@@ -96,48 +166,57 @@ class SavingsAccount(BankAccount):
 
         :return: сумма начисленных процентов.
         """
-        interest = self.balance * self.__rate / 100
+        interest = self._balance * self.__rate / INTEREST_DIVISOR
         if interest > 0:
             self.deposit(interest)
-            self._BankAccount__history.append(f"Начисление процентов: +{interest}. Баланс: {self.balance}")
         return interest
 
     def withdraw(self, amount):
         """
         Снимает сумму со счёта (не более 50% баланса за одну операцию).
 
-        :param amount: сумма снятия.
-        :return: True, если операция успешна; False в противном случае.
+        :param amount: сумма снятия (положительное число).
+        :return: True, если операция успешна; False, если amount невалиден,
+                 превышает 50% баланса или недостаточно средств.
         """
         if type(amount) not in (int, float) or amount <= 0:
-            print(f"Ошибка: сумма снятия должна быть положительным числом.")
+            print("Ошибка: сумма снятия должна быть положительным числом.")
             return False
 
-        if amount > self.balance * 0.5:
+        max_withdraw = self._balance * MAX_WITHDRAW_PERCENT
+        if amount > max_withdraw:
             print(
-                f"Ошибка: со сберегательного счёта нельзя снять более 50% "
-                f"баланса ({self.balance * 0.5})."
+                f"Ошибка: со сберегательного счёта нельзя снять более "
+                f"{MAX_WITHDRAW_PERCENT * 100}% баланса ({max_withdraw})."
             )
             return False
 
-        if amount > self.balance:
-            print(f"Ошибка: недостаточно средств. Баланс: {self.balance}.")
+        if amount > self._balance:
+            print(f"Ошибка: недостаточно средств. Баланс: {self._balance}.")
             return False
 
-        self._BankAccount__balance -= amount
-        self._BankAccount__history.append(f"Снятие (Сбер): -{amount}. Баланс: {self.balance}")
+        self._balance -= amount
+        self._history.append(f"Снятие (Сбер): -{amount}. Баланс: {self._balance}")
         return True
+
+    def __str__(self):
+        """
+        Возвращает строковое представление сберегательного счёта.
+
+        :return: строка с описанием счёта.
+        """
+        return f"{super().__str__()}, Ставка: {self.__rate}%"
 
 
 if __name__ == "__main__":
     print("=== 1. Создание объектов ===")
     account = BankAccount("Иван", 1500)
     savings = SavingsAccount("Мария", 6000, rate=5)
-    account2 = BankAccount.from_owner("Пётр", 2500)
+    account2 = BankAccount("Пётр", 2500)
 
-    print(f"{account.owner}: баланс {account.balance}")
-    print(f"{savings.owner}: баланс {savings.balance}, ставка {savings.rate}%")
-    print(f"{account2.owner}: баланс {account2.balance}")
+    print(account)
+    print(savings)
+    print(account2)
 
     print("\n=== 2. Корректное пополнение и снятие ===")
     account.deposit(500)
@@ -164,11 +243,11 @@ if __name__ == "__main__":
     print("\n=== 5. Вывод истории операций ===")
     print(f"История {account.owner}:")
     for entry in account.history:
-        print(f"{entry}")
+        print(f"  {entry}")
 
     print(f"\nИстория {savings.owner}:")
     for entry in savings.history:
-        print(f"{entry}")
+        print(f"  {entry}")
 
     print("\n=== 6. Начисление процентов на сберегательный счёт ===")
     print(f"Баланс до начисления: {savings.balance}")
@@ -177,16 +256,16 @@ if __name__ == "__main__":
     print(f"Баланс после начисления: {savings.balance}")
 
     print("\n=== 7. Полиморфное поведение метода снятия ===")
-    accounts = [account, savings]
+    accounts = (account, savings)
 
     for acc in accounts:
         print(f"\n{type(acc).__name__} ({acc.owner}), баланс: {acc.balance}")
-        acc.withdraw(100)
-        print(f"После снятия 100: {acc.balance}")
+        acc.withdraw(TEST_WITHDRAW_AMOUNT)
+        print(f"После снятия {TEST_WITHDRAW_AMOUNT}: {acc.balance}")
 
     print("\n=== 8. Попытка снять более 50% со сберегательного счёта ===")
     print(f"Баланс {savings.owner}: {savings.balance}")
-    big_amount = savings.balance * 0.6
+    big_amount = savings.balance * TEST_BIG_WITHDRAW_PERCENT
     savings.withdraw(big_amount)
 
     print("\n=== 9. Проверка, что history возвращает копию ===")
@@ -194,5 +273,4 @@ if __name__ == "__main__":
     history_copy.append("Попытка подменить историю")
     print(f"Реальная история: {account.history}")
     print("Копия не изменила внутренний список — защита работает.")
-
 
