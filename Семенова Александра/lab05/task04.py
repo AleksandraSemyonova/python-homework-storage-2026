@@ -1,89 +1,78 @@
 #!/usr/bin/env python3
 
 import argparse
-import os
 
-MAX_SPLITS = 1
 
-def parse_replace(arg):
+ERROR_EMPTY_OLD = "Строка OLD не может быть пустой."
+ERROR_BAD_FORMAT = "Некорректный формат строки. Ожидается 'OLD=NEW'."
+
+DEMO_LINE_1 = "apple=fruit"
+DEMO_LINE_2 = "=empty_old"
+DEMO_LINE_3 = "no_equals_sign"
+DEMO_LINE_4 = "banana=yellow_fruit"
+
+
+def parse_line(line):
     """
-    Парсит аргумент --replace в формате OLD=NEW.
+    Парсит строку формата 'OLD=NEW'.
 
-    :param arg: строка в формате OLD=NEW.
-    :return: кортеж (OLD, NEW).
-    :raises ValueError: если формат неверный или OLD пустой.
+    Args:
+        line: строка для парсинга.
+
+    Returns:
+        dict: словарь с ключами 'old' и 'new'.
+
+    Raises:
+        ValueError: если формат некорректный или OLD пустая.
     """
-    if '=' not in arg:
-        raise ValueError(f"Неверный формат замены: '{arg}'. Ожидается OLD=NEW.")
-    parts = arg.split('=', MAX_SPLITS)
+    parts = line.split("=", 1)
+    if len(parts) != 2:
+        raise ValueError(ERROR_BAD_FORMAT)
+
     old, new = parts[0], parts[1]
     if not old:
-        raise ValueError("Строка OLD не может быть пустой.")
-    return old, new
+        raise ValueError(ERROR_EMPTY_OLD)
+
+    return {"old": old, "new": new}
+
+
+def parse_args(argv=None):
+    """
+    Разбирает аргументы командной строки.
+
+    Args:
+        argv: список аргументов.
+
+    Returns:
+        argparse.Namespace: пространство имён с полем lines.
+    """
+    parser = argparse.ArgumentParser(
+        description="Парсер строк формата OLD=NEW."
+    )
+    parser.add_argument(
+        "lines",
+        nargs="+",
+        help="Одна или несколько строк формата 'OLD=NEW'."
+    )
+    return parser.parse_args(argv)
+
+
+def run(lines):
+    """
+    Парсит список строк и выводит результат.
+
+    Args:
+        lines: список строк для парсинга.
+    """
+    for line in lines:
+        try:
+            result = parse_line(line)
+            print(f"OLD: '{result['old']}', NEW: '{result['new']}'")
+        except ValueError as e:
+            print(f"Ошибка при разборе '{line}': {e}")
 
 
 if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(
-        description="Утилита для копирования файлов с заменой текста и добавлением подвала."
-    )
-    parser.add_argument(
-        "--input",
-        required=True,
-        help="Путь к входному файлу.",
-    )
-    parser.add_argument(
-        "--output",
-        required=True,
-        help="Путь к выходному файлу.",
-    )
-    parser.add_argument(
-        "--replace",
-        action="append",
-        default=[],
-        help="Замена в формате OLD=NEW. Можно указывать несколько раз.",
-    )
-    parser.add_argument(
-        "--append-footer",
-        default=None,
-        help="Строка, которую нужно добавить в конец выходного файла.",
-    )
-    parser.add_argument(
-        "--force",
-        action="store_true",
-        help="Разрешить перезапись существующего выходного файла.",
-    )
-
-    args = parser.parse_args()
-
-    if not os.path.exists(args.input):
-        raise f"Входной файл не существует: {args.input}"
-
-    if os.path.exists(args.output) and not args.force:
-        raise f"Выходной файл уже существует: {args.output}. "f"Используйте --force для перезаписи."
-        
-
-    with open(args.input, 'r', encoding='utf-8-sig') as f:
-        content = f.read()
-
-    total_replacements = 0
-    for replace_arg in args.replace:
-        old, new = parse_replace(replace_arg)
-        count = content.count(old)
-        content = content.replace(old, new)
-        total_replacements += count
-        print(f"Заменено '{old}' на '{new}': {count} раз.")
-
-    if args.append_footer is not None:
-        if content and not content.endswith('\n'):
-            content += '\n'              #чтобы начиналось с новой строки
-        content += args.append_footer
-        if not content.endswith('\n'):
-            content += '\n'
-
-    with open(args.output, 'w', encoding='utf-8') as f:
-        f.write(content)
-
-    print(f"\nВсего выполнено замен: {total_replacements}")
-    print(f"Результат записан в: {args.output}")
+    args = parse_args()
+    run(args.lines)
 
