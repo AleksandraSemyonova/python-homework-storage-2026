@@ -1,23 +1,32 @@
 #!/usr/bin/env python3
 
 import argparse
-import sys
 
 
 ERROR_NO_STRINGS = "Ошибка: не передано ни одной строки. Укажите хотя бы один аргумент."
 
-TEST_STRINGS = ["яблоко", "банан", "яблоко", "киви", "ананас", "груша", "айва"]
+TEST_STRINGS = ("яблоко", "банан", "яблоко", "киви", "ананас", "груша", "айва")
 TEST_UNIQUE = True
 TEST_MIN_LENGTH = 4
 TEST_SORT = "asc"
 TEST_COUNT = False
 MIN_LENGTH_THRESHOLD = 0
 
-def parse_args():
+SORT_ASC = "asc"
+SORT_DESC = "desc"
+SORT_NONE = "none"
+VALID_SORT_MODES = (SORT_ASC, SORT_DESC, SORT_NONE)
+
+
+def parse_args(argv=None):
     """
     Парсит аргументы командной строки.
 
-    :return: объект Namespace с разобранными аргументами.
+    Args:
+        argv: список аргументов.
+
+    Returns:
+        argparse.Namespace: объект с разобранными аргументами.
     """
     parser = argparse.ArgumentParser(
         description="Обработка строковых аргументов с фильтрацией и сортировкой."
@@ -45,8 +54,8 @@ def parse_args():
     )
     parser.add_argument(
         "--sort",
-        choices=["asc", "desc", "none"],
-        default="none",
+        choices=VALID_SORT_MODES,
+        default=SORT_NONE,
         help="Сортировка строк: asc (по возрастанию), desc (по убыванию), none (без сортировки).",
     )
     parser.add_argument(
@@ -54,17 +63,20 @@ def parse_args():
         action="store_true",
         help="Запустить с тестовым набором данных.",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def filter_strings(strings, unique, min_length):
     """
     Применяет фильтры к списку строк.
 
-    :param strings: исходный список строк.
-    :param unique: если True, оставить только уникальные строки.
-    :param min_length: минимальная допустимая длина строки.
-    :return: отфильтрованный список строк.
+    Args:
+        strings: исходный список строк.
+        unique: если True, оставить только уникальные строки.
+        min_length: минимальная допустимая длина строки.
+
+    Returns:
+        list: отфильтрованный список строк.
     """
     result = strings
 
@@ -87,15 +99,39 @@ def sort_strings(strings, mode):
     """
     Сортирует список строк согласно указанному режиму.
 
-    :param strings: список строк.
-    :param mode: режим сортировки ('asc', 'desc', 'none').
-    :return: отсортированный (или исходный) список строк.
+    Args:
+        strings: список строк.
+        mode: режим сортировки ('asc', 'desc', 'none').
+
+    Returns:
+        list: отсортированный (или исходный) список строк.
     """
-    if mode == "asc":
+    if mode == SORT_ASC:
         return sorted(strings)
-    elif mode == "desc":
+    elif mode == SORT_DESC:
         return sorted(strings, reverse=True)
     return strings
+
+
+def run(strings, count=False, unique=False, min_length=0, sort=SORT_NONE):
+    """
+    Выполняет фильтрацию, сортировку и вывод строк.
+
+    Args:
+        strings: список строк.
+        count: если True, вывести только количество.
+        unique: если True, оставить только уникальные.
+        min_length: минимальная длина строки.
+        sort: режим сортировки.
+    """
+    filtered = filter_strings(strings, unique, min_length)
+    result = sort_strings(filtered, sort)
+
+    if count:
+        print(len(result))
+    else:
+        for s in result:
+            print(s)
 
 
 if __name__ == "__main__":
@@ -109,16 +145,14 @@ if __name__ == "__main__":
         args.count = TEST_COUNT
 
     if not args.strings:
-        print(ERROR_NO_STRINGS, file=sys.stderr)
-        sys.exit(1)
+        print(ERROR_NO_STRINGS)
+        raise SystemExit(1)
 
-    filtered = filter_strings(args.strings, args.unique, args.min_length)
-    result = sort_strings(filtered, args.sort)
-
-    if args.count:
-        print(len(result))
-    else:
-        for s in result:
-            print(s)
-
+    run(
+        strings=args.strings,
+        count=args.count,
+        unique=args.unique,
+        min_length=args.min_length,
+        sort=args.sort,
+    )
 
