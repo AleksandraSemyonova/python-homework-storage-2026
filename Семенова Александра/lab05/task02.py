@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-
 import argparse
-import os
+
 
 VALID_OPERATIONS = ("add", "sub", "mul", "div")
 DEFAULT_PRECISION = 2
@@ -41,12 +40,13 @@ def calculate(x, y, operation="add", precision=DEFAULT_PRECISION):
         precision: количество знаков после запятой.
 
     Returns:
-        tuple: (result, error_message). Если операция выполнена
-            успешно, error_message равно None. При делении на ноль
-            result равно None.
+        dict: словарь с ключами 'result' и 'error'.
+            Если операция выполнена успешно, 'error' равно None.
+            При делении на ноль 'result' равно None.
+            Если operation is None, 'result' содержит кортеж (x, y).
     """
     if operation is None:
-        return (x, y), None
+        return {"result": (x, y), "error": None}
 
     operations = {
         "add": lambda a, b: a + b,
@@ -57,9 +57,12 @@ def calculate(x, y, operation="add", precision=DEFAULT_PRECISION):
 
     try:
         result = operations[operation](x, y)
-        return round(result, precision), None
+        return {"result": round(result, precision), "error": None}
     except ZeroDivisionError:
-        return None, f"Ошибка: деление на ноль ({x} / {y})."
+        return {
+            "result": None,
+            "error": f"Ошибка: деление на ноль ({x} / {y})."
+        }
 
 
 def format_result(x, y, operation, result, precision):
@@ -92,9 +95,8 @@ def save_to_file(line, filename):
         line: строка для записи.
         filename: имя файла для сохранения.
     """
-    def save_to_file(line, filename):
-     entry = f"{line}\n"
-     with open(filename, "a", encoding="utf-8") as f:
+    entry = f"{line}\n"
+    with open(filename, "a", encoding="utf-8") as f:
         f.write(entry)
 
 
@@ -103,7 +105,7 @@ def parse_args(argv=None):
     Разбирает аргументы командной строки для калькулятора.
 
     Args:
-        argv: список аргументов (по умолчанию sys.argv[1:]).
+        argv: список аргументов.
 
     Returns:
         argparse.Namespace: пространство имён с полями x, y,
@@ -144,14 +146,17 @@ def run(x, y, operation=None, precision=DEFAULT_PRECISION,
         precision: точность округления.
         filename: имя файла для сохранения истории.
     """
-    result, error = calculate(x, y, operation, precision)
+    response = calculate(x, y, operation, precision)
+    result = response["result"]
+    error = response["error"]
 
     if error:
         save_to_file(f"ОШИБКА: {error}", filename)
+        print(f"Ошибка: {error}")
         return
 
     line = format_result(x, y, operation, result, precision)
-    
+
     if operation is None:
         print(f"Операция не указана. Числа: {line}")
     else:
@@ -162,29 +167,25 @@ def run(x, y, operation=None, precision=DEFAULT_PRECISION,
 
 
 if __name__ == "__main__":
+    args = parse_args()
 
     print("--- Случай 1: сложение ---")
     print(f"Параметры: {DEMO_CALC_1}")
     run(**DEMO_CALC_1)
-  
 
-    print("--- Случай 2: деление с точностью 4 знака ---")
+    print("\n--- Случай 2: деление с точностью 7 знаков ---")
     print(f"Параметры: {DEMO_CALC_2}")
     run(**DEMO_CALC_2)
-   
-    print("--- Случай 3: деление на ноль ---")
+
+    print("\n--- Случай 3: деление на ноль ---")
     print(f"Параметры: {DEMO_CALC_3}")
     run(**DEMO_CALC_3)
 
-
-    print("--- Случай 4: операция не указана ---")
+    print("\n--- Случай 4: операция не указана ---")
     print(f"Параметры: {DEMO_CALC_4}")
     run(**DEMO_CALC_4)
-  
 
-    print("--- Случай 5: умножение с точностью 3 знака ---")
+    print("\n--- Случай 5: умножение с точностью 3 знака ---")
     print(f"Параметры: {DEMO_CALC_5}")
     run(**DEMO_CALC_5)
-    
-
 
